@@ -12,8 +12,10 @@ app.use(cors());
 app.use(helmet());
 
 const queryRouter = require('./routes/container-details');
+const authRouter = require('./routes/auth');
 
 app.use("/query", queryRouter);
+app.use("/auth",authRouter)
 
 const port = process.env.PORT||3000
 
