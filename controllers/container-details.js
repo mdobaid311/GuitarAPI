@@ -3,6 +3,7 @@ const columnNames = require("../utils/columnNames");
 
 const executeQuery = async (req, res) => {
   const query = req.body.query;
+  // const query = `SELECT * FROM container_details`;
   client.execute(query, async (err, result) => {
     if (err) {
       res.status(400).json(err);

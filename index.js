@@ -14,6 +14,10 @@ const queryRouter = require("./routes/container-details");
 const authRouter = require("./routes/auth");
 const widgetsRouter = require("./routes/widgets");
 
+app.get("/", (req, res) => {
+    res.send("Guitar API");
+})
+
 app.use("/query", queryRouter);
 app.use("/auth", authRouter);
 app.use("/widgets", widgetsRouter);
