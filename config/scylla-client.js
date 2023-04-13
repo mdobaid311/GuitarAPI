@@ -2,7 +2,7 @@ let cassandra = require("cassandra-driver");
 let client;
 try {
   client = new cassandra.Client({
-    contactPoints: ["13.233.104.169"],
+    contactPoints: ["43.204.234.254"],
     localDataCenter: "ap-south",
     keyspace: "guitardb",
   });
