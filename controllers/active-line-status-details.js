@@ -122,7 +122,6 @@ const getOriginalOrderTotalByDay = async (req, res) => {
         .add(1, "day")
         .format("YYYY-MM-DD HH:mm:ss");
 
- 
       const result = await client.execute(
         `select sum(original_order_total_amount) as original_orders_total from temp_table where order_date > '${start_date}' and order_date < '${end_date}' ALLOW FILTERING`
       );
@@ -138,9 +137,47 @@ const getOriginalOrderTotalByDay = async (req, res) => {
   }
 };
 
+const getOriginalOrderTotalByHour = async (req, res) => {
+  const { year, month, day } = req.query;
+  const results = [];
+
+  const fullDate = moment(`${year}-${month}-${day}`).format(
+    "YYYY-MM-DD HH:mm:ss"
+  );
+
+  console.log(fullDate);
+
+  try {
+    for (let i = 0; i < 24; i++) {
+      const start_date = moment(fullDate)
+        .add(i, "hour")
+        .format("YYYY-MM-DD HH:mm:ss");
+
+      const end_date = moment(start_date)
+        .add(1, "hour")
+        .format("YYYY-MM-DD HH:mm:ss");
+
+      const result = await client.execute(
+        `select sum(original_order_total_amount) as original_orders_total from temp_table where order_date > '${start_date}' and order_date < '${end_date}' ALLOW FILTERING`
+      );
+      console.log(
+        `select sum(original_order_total_amount) as original_orders_total from temp_table where order_date > '${start_date}' and order_date < '${end_date}' ALLOW FILTERING`
+      );
+      results.push({
+        hour: moment(start_date).format("HH:mm"),
+        total: result.rows[0].original_orders_total,
+      });
+    }
+    res.status(200).json(results);
+  } catch (error) {
+    res.status(401).json(error);
+  }
+};
+
 module.exports = {
   getOriginalOrderTotalAmount,
   getOriginalOrderTotalByMonth,
   getOriginalOrderTotalByYear,
   getOriginalOrderTotalByDay,
+  getOriginalOrderTotalByHour,
 };
