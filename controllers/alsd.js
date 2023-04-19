@@ -105,17 +105,29 @@ const getOriginalOrderTotalByYear = async (req, res) => {
   const results = [];
 
   try {
-    for (let year = 2015; year < 2024; year++) {
-      const result = await client.execute(
-        `select sum(original_order_total_amount) as original_orders_total from alsd_aggregated where year=${year} ALLOW FILTERING`
-      );
+    const result = await client.execute(
+      `select * from alsd_aggregated ALLOW FILTERING`,
+      null,
+      {
+        prepare: true,
+        fetchSize: 10000,
+      }
+    );
 
-      results.push({
-        year: moment(year, "YYYY").format("YYYY"),
-        total: +result.rows[0].original_orders_total,
-      });
-    }
-    res.status(200).json(results);
+    const yearlyOrderTotal = result.rows.reduce((acc, order) => {
+      const year = order.year.low;
+      const total = order.original_order_total_amount.low;
+      acc[year] = (acc[year] || 0) + total;
+      return acc;
+    }, {});
+
+    const yearlyOrderTotalArray = Object.keys(yearlyOrderTotal).map((year) => {
+      return {
+        year: year,
+        total: yearlyOrderTotal[year],
+      };
+    });
+    res.status(200).json(yearlyOrderTotalArray);
   } catch (error) {
     res.status(401).json(error);
   }
