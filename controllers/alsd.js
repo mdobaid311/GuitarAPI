@@ -29,18 +29,33 @@ const getOriginalOrderTotalAmount = async (req, res) => {
       ];
       res.status(200).json(total);
     } else if (start_date && end_date) {
+      const startYear = moment(start_date).format("YYYY");
+      const startMonth = moment(start_date).format("MM");
+      const startDay = moment(start_date).format("DD");
+
+      const endYear = moment(end_date).format("YYYY");
+      const endMonth = moment(end_date).format("MM");
+      const endDay = moment(end_date).format("DD");
+
       const result = await client.execute(
-        `select sum(original_order_total_amount) as original_orders_total from temp_table where order_date >= ${start_date} and order_date <= ${end_date} ALLOW FILTERING`
+        `SELECT sum(original_order_total_amount) as original_orders_total from alsd_aggregated where year>=${startYear} and month>=${startMonth} and day>=${startDay} and year<=${endYear} and month<=${endMonth} and day<=${endDay} limit 10 ALLOW FILTERING ;`
       );
 
-      res.status(200).json(result.rows);
+      const total = [
+        {
+          original_orders_total: +result.rows[0].original_orders_total,
+        },
+      ];
+      res.status(200).json(total);
     } else if (start_date) {
+      console.log("} else if (start_date) {");
       const result = await client.execute(
         `select sum(original_order_total_amount) as original_orders_total from temp_table where order_date >= ${start_date} ALLOW FILTERING`
       );
 
       res.status(200).json(result.rows);
     } else if (end_date) {
+      console.log("} else if (end_date) {");
       const result = await client.execute(
         `select sum(original_order_total_amount) as original_orders_total from temp_table where order_date <= ${end_date} ALLOW FILTERING`
       );
