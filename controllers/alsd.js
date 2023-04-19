@@ -140,10 +140,11 @@ const getOriginalOrderTotalByDay = async (req, res) => {
       acc[day] = (acc[day] || 0) + total;
       return acc;
     }, {});
+    console.log(Object.keys(dailyOrderTotal));
 
     const dailyOrderTotalArray = Object.keys(dailyOrderTotal).map((day) => {
       return {
-        day: moment(day, "DD").format("DD"),
+        day: day,
         total: dailyOrderTotal[day],
       };
     });
