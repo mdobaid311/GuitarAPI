@@ -1,11 +1,19 @@
 const express = require("express");
-const {
+// const {
+//   getOriginalOrderTotalAmount,
+//   getOriginalOrderTotalByMonth,
+//   getOriginalOrderTotalByYear,
+//   getOriginalOrderTotalByDay,
+//   getOriginalOrderTotalByHour,
+// } = require("../controllers/active-line-status-details");
+
+ const {
   getOriginalOrderTotalAmount,
   getOriginalOrderTotalByMonth,
   getOriginalOrderTotalByYear,
   getOriginalOrderTotalByDay,
   getOriginalOrderTotalByHour,
-} = require("../controllers/active-line-status-details");
+} = require("../controllers/alsd");
 
 const router = express.Router();
 
