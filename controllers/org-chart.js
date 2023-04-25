@@ -29,43 +29,43 @@ const getOrgChartData = async (req, res) => {
     } while (pageState);
 
     const outputArray = records.reduce((acc, item) => {
-      const existingItem = acc.find(
-        (i) => i.enterprise_key === item.enterprise_key
-      );
+      const existingItem = acc.find((i) => i.key === item.enterprise_key);
 
       if (existingItem) {
         const existingChild = existingItem.children.find(
-          (c) => c.order_capture_channel === item.order_capture_channel
+          (c) => c.key === item.order_capture_channel
         );
 
         if (existingChild) {
-          existingChild.total_original_order_total_amount += Number(
+          existingChild.original_order_total_amount += Number(
             item.original_order_total_amount
           );
         } else {
           existingItem.children.push({
-            order_capture_channel: item.order_capture_channel,
-            total_original_order_total_amount: Number(
+            key: item.order_capture_channel,
+            original_order_total_amount: Number(
               item.original_order_total_amount
             ),
+            children: [],
           });
         }
 
-        existingItem.total_original_order_total_amount += Number(
+        existingItem.original_order_total_amount += Number(
           item.original_order_total_amount
         );
       } else {
         acc.push({
-          enterprise_key: item.enterprise_key,
-          total_original_order_total_amount: Number(
+          key: item.enterprise_key,
+          original_order_total_amount: Number(
             item.original_order_total_amount
           ),
           children: [
             {
-              order_capture_channel: item.order_capture_channel,
-              total_original_order_total_amount: Number(
+              key: item.order_capture_channel,
+              original_order_total_amount: Number(
                 item.original_order_total_amount
               ),
+              children: [],
             },
           ],
         });
