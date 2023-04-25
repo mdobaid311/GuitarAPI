@@ -14,15 +14,17 @@ const queryRouter = require("./routes/container-details");
 const authRouter = require("./routes/auth");
 const widgetsRouter = require("./routes/widgets");
 const activeLineStatusDetailsRouter = require("./routes/active-line-status-details");
+const orgChartRouter = require("./routes/org-chart");
 
 app.get("/", (req, res) => {
-    res.send("Guitar API");
-})
+  res.send("Guitar API");
+});
 
 app.use("/query", queryRouter);
 app.use("/auth", authRouter);
 app.use("/widgets", widgetsRouter);
 app.use("/alsd", activeLineStatusDetailsRouter);
+app.use("/org", orgChartRouter);
 
 const port = process.env.PORT || 3000;
 

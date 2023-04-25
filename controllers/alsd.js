@@ -102,8 +102,6 @@ const getOriginalOrderTotalByMonth = async (req, res) => {
 };
 
 const getOriginalOrderTotalByYear = async (req, res) => {
-  const results = [];
-
   try {
     const result = await client.execute(
       `select * from alsd_aggregated ALLOW FILTERING`,
