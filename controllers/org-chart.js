@@ -56,9 +56,7 @@ const getOrgChartData = async (req, res) => {
       } else {
         acc.push({
           key: item.enterprise_key,
-          original_order_total_amount: Number(
-            item.original_order_total_amount
-          ),
+          original_order_total_amount: Number(item.original_order_total_amount),
           children: [
             {
               key: item.order_capture_channel,
@@ -73,7 +71,17 @@ const getOrgChartData = async (req, res) => {
 
       return acc;
     }, []);
-    res.status(200).json(outputArray);
+    const finalTotal = outputArray.reduce((acc, item) => {
+      return (acc += item.original_order_total_amount);
+    }, 0);
+
+    res.status(200).json([
+      {
+        key: "Sales",
+        original_order_total_amount: finalTotal,
+        children: outputArray,
+      },
+    ]);
   } catch (err) {
     res.status(500).json(err);
   }
