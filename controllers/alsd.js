@@ -332,7 +332,10 @@ const getOriginalOrderTotalByDayRange = async (req, res) => {
       return res.status(200).json({ totalAmount: 0, data: [] });
     }
     const daylyOrderTotal = results.reduce((acc, order) => {
-      const day = order.day.low;
+      const day = moment(
+        order.month.low + "-" + order.day.low,
+        "MM-DD"
+      ).format("MM-DD");
       const total = order.original_order_total_amount.low;
       acc[day] = (acc[day] || 0) + total;
       return acc;
@@ -345,7 +348,7 @@ const getOriginalOrderTotalByDayRange = async (req, res) => {
     const daylyOrderTotalArray = Object.keys(daylyOrderTotal).map((day) => {
       console.log(day);
       return {
-        day: day,
+        day: moment(day, "MM-DD").format("MM-DD"),
         total: daylyOrderTotal[day],
       };
     });
@@ -388,10 +391,12 @@ const getOriginalOrderTotalByMonthRange = async (req, res) => {
     if (results.length === 0) {
       return res.status(200).json({ totalAmount: 0, data: [] });
     }
-    console.log(results[0]);
 
     const monthlyOrderTotal = results.reduce((acc, order) => {
-      const month = order.month.low;
+      const month = moment(
+        `${order.month.low}-${order.year.low}`,
+        "MM YYYY"
+      ).format("MMM YYYY");
       const total = order.original_order_total_amount.low;
       acc[month] = (acc[month] || 0) + total;
       return acc;
@@ -404,7 +409,7 @@ const getOriginalOrderTotalByMonthRange = async (req, res) => {
       (month) => {
         console.log(month);
         return {
-          month: moment(month, "MM").format("MM"),
+          month: month,
           total: monthlyOrderTotal[month],
         };
       }
