@@ -1,5 +1,6 @@
 const client = require("../config/scylla-client");
 const moment = require("moment");
+const { split_years, split_months } = require("../helpers/helpers");
 
 const getOriginalOrderTotalAmount = async (req, res) => {
   const { start_date, end_date, year } = req.query;
@@ -295,27 +296,42 @@ const getOriginalOrderTotalByHourRange = async (req, res) => {
 };
 
 const getOriginalOrderTotalByDayRange = async (req, res) => {
-  const { startDate, endDate } = req.query;
-  const startYear = moment(startDate, "YYYY-MM-DD HH:mm").format("YYYY");
-  const startMonth = moment(startDate, "YYYY-MM-DD HH:mm").format("MM");
-  const startDay = moment(startDate, "YYYY-MM-DD HH:mm").format("DD");
-  const endYear = moment(endDate, "YYYY-MM-DD HH:mm").format("YYYY");
-  const endMonth = moment(endDate, "YYYY-MM-DD HH:mm").format("MM");
-  const endDay = moment(endDate, "YYYY-MM-DD HH:mm").format("DD");
-
   try {
-    const result = await client.execute(
-      `select * from alsd_aggregated where year>=${startYear} and month>=${startMonth} and day>=${startDay} and year<=${endYear} and month<=${endMonth} and day<=${endDay}  ALLOW FILTERING`,
-      null,
-      {
-        prepare: true,
-        fetchSize: 10000,
-      }
-    );
-    if (result.rows.length === 0) {
+    const { startDate, endDate } = req.query;
+    const dates = split_months(startDate, endDate);
+    const results = [];
+    for (let i = 0; i < dates.length; i++) {
+      const startYear = moment(dates[i].startDate, "YYYY-MM-DD HH:mm").format(
+        "YYYY"
+      );
+      const startMonth = moment(dates[i].startDate, "YYYY-MM-DD HH:mm").format(
+        "MM"
+      );
+      const startDay = moment(dates[i].startDate, "YYYY-MM-DD HH:mm").format(
+        "DD"
+      );
+      const endYear = moment(dates[i].endDate, "YYYY-MM-DD HH:mm").format(
+        "YYYY"
+      );
+      const endMonth = moment(dates[i].endDate, "YYYY-MM-DD HH:mm").format(
+        "MM"
+      );
+      const endDay = moment(dates[i].endDate, "YYYY-MM-DD HH:mm").format("DD");
+
+      const result = await client.execute(
+        `select * from alsd_aggregated where year>=${startYear} and month>=${startMonth} and day>=${startDay} and year<=${endYear} and month<=${endMonth} and day<=${endDay}  ALLOW FILTERING`,
+        null,
+        {
+          prepare: true,
+          fetchSize: 10000,
+        }
+      );
+      results.unshift(...result.rows);
+    }
+    if (results.length === 0) {
       return res.status(200).json({ totalAmount: 0, data: [] });
     }
-    const daylyOrderTotal = result.rows.reduce((acc, order) => {
+    const daylyOrderTotal = results.reduce((acc, order) => {
       const day = order.day.low;
       const total = order.original_order_total_amount.low;
       acc[day] = (acc[day] || 0) + total;
@@ -329,7 +345,7 @@ const getOriginalOrderTotalByDayRange = async (req, res) => {
     const daylyOrderTotalArray = Object.keys(daylyOrderTotal).map((day) => {
       console.log(day);
       return {
-        day: moment(day, "DD").format("DD"),
+        day: day,
         total: daylyOrderTotal[day],
       };
     });
@@ -340,34 +356,46 @@ const getOriginalOrderTotalByDayRange = async (req, res) => {
 };
 
 const getOriginalOrderTotalByMonthRange = async (req, res) => {
-  const { startDate, endDate } = req.query;
-  const startYear = moment(startDate, "YYYY-MM-DD HH:mm").format("YYYY");
-  const startMonth = moment(startDate, "YYYY-MM-DD HH:mm").format("MM");
-  const endYear = moment(endDate, "YYYY-MM-DD HH:mm").format("YYYY");
-  const endMonth = moment(endDate, "YYYY-MM-DD HH:mm").format("MM");
-  console.log(startDate, endDate);
-  console.log(
-    `select * from alsd_aggregated where year>=${startYear}  and year<=${endYear}  ALLOW FILTERING`
-  );
   try {
-    const result = await client.execute(
-      `select * from alsd_aggregated where year>=${startYear} and month>= ${startMonth} and year<=${endYear}  ALLOW FILTERING`,
-      null,
-      {
-        prepare: true,
-        fetchSize: 10000,
-      }
-    );
-    if (result.rows.length === 0) {
+    const { startDate, endDate } = req.query;
+    const dates = split_years(startDate, endDate);
+    const results = [];
+    for (let i = 0; i < dates.length; i++) {
+      const startYear = moment(dates[i].startDate, "YYYY-MM-DD HH:mm").format(
+        "YYYY"
+      );
+      const startMonth = moment(dates[i].startDate, "YYYY-MM-DD HH:mm").format(
+        "MM"
+      );
+      const endYear = moment(dates[i].endDate, "YYYY-MM-DD HH:mm").format(
+        "YYYY"
+      );
+      const endMonth = moment(dates[i].endDate, "YYYY-MM-DD HH:mm").format(
+        "MM"
+      );
+
+      const result = await client.execute(
+        `select * from alsd_aggregated where year>=${startYear} and month>= ${startMonth} and year<=${endYear} and month<=${endMonth}  ALLOW FILTERING`,
+        null,
+        {
+          prepare: true,
+          fetchSize: 10000,
+        }
+      );
+      results.unshift(...result.rows);
+    }
+
+    if (results.length === 0) {
       return res.status(200).json({ totalAmount: 0, data: [] });
     }
-    const monthlyOrderTotal = result.rows.reduce((acc, order) => {
+    console.log(results[0]);
+
+    const monthlyOrderTotal = results.reduce((acc, order) => {
       const month = order.month.low;
       const total = order.original_order_total_amount.low;
       acc[month] = (acc[month] || 0) + total;
       return acc;
     }, {});
-
     const totalAmount = Object.values(monthlyOrderTotal).reduce(
       (acc, total) => acc + total
     );
