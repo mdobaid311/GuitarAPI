@@ -49,14 +49,12 @@ const getOriginalOrderTotalAmount = async (req, res) => {
       ];
       res.status(200).json(total);
     } else if (start_date) {
-      console.log("} else if (start_date) {");
       const result = await client.execute(
         `select sum(original_order_total_amount) as original_orders_total from temp_table where order_date >= ${start_date} ALLOW FILTERING`
       );
 
       res.status(200).json(result.rows);
     } else if (end_date) {
-      console.log("} else if (end_date) {");
       const result = await client.execute(
         `select sum(original_order_total_amount) as original_orders_total from temp_table where order_date <= ${end_date} ALLOW FILTERING`
       );
@@ -151,7 +149,6 @@ const getOriginalOrderTotalByDay = async (req, res) => {
       acc[day] = (acc[day] || 0) + total;
       return acc;
     }, {});
-    console.log(Object.keys(dailyOrderTotal));
 
     const dailyOrderTotalArray = Object.keys(dailyOrderTotal).map((day) => {
       return {
@@ -234,7 +231,6 @@ const getOriginalOrderTotalByTenMinRange = async (req, res) => {
 
     const tenMinOrderTotalArray = Object.keys(tenMinOrderTotal).map(
       (ten_min) => {
-        console.log(ten_min);
         return {
           ten_min: moment(ten_min, "mm").format("mm"),
           total: tenMinOrderTotal[ten_min],
@@ -283,7 +279,6 @@ const getOriginalOrderTotalByHourRange = async (req, res) => {
     );
 
     const HourlyOrderTotalArray = Object.keys(HourlyOrderTotal).map((hour) => {
-      console.log(hour);
       return {
         hour: moment(hour, "HH").format("HH A"),
         total: HourlyOrderTotal[hour],
@@ -300,6 +295,7 @@ const getOriginalOrderTotalByDayRange = async (req, res) => {
     const { startDate, endDate } = req.query;
     const dates = split_months(startDate, endDate);
     const results = [];
+    console.log(dates)
     for (let i = 0; i < dates.length; i++) {
       const startYear = moment(dates[i].startDate, "YYYY-MM-DD HH:mm").format(
         "YYYY"
@@ -316,7 +312,7 @@ const getOriginalOrderTotalByDayRange = async (req, res) => {
       const endMonth = moment(dates[i].endDate, "YYYY-MM-DD HH:mm").format(
         "MM"
       );
-      const endDay = moment(dates[i].endDate, "YYYY-MM-DD HH:mm").format("DD");
+      const endDay = moment(dates[i].endDate, "YYYY-MM-DD HH:mm").format("D");
 
       const result = await client.execute(
         `select * from alsd_aggregated where year>=${startYear} and month>=${startMonth} and day>=${startDay} and year<=${endYear} and month<=${endMonth} and day<=${endDay}  ALLOW FILTERING`,
@@ -326,16 +322,16 @@ const getOriginalOrderTotalByDayRange = async (req, res) => {
           fetchSize: 10000,
         }
       );
-      results.unshift(...result.rows);
+
+      results.push(...result.rows);
     }
     if (results.length === 0) {
       return res.status(200).json({ totalAmount: 0, data: [] });
     }
     const daylyOrderTotal = results.reduce((acc, order) => {
-      const day = moment(
-        order.month.low + "-" + order.day.low,
+      const day = moment(order.month.low + "-" + order.day.low, "MM-DD").format(
         "MM-DD"
-      ).format("MM-DD");
+      );
       const total = order.original_order_total_amount.low;
       acc[day] = (acc[day] || 0) + total;
       return acc;
@@ -346,7 +342,6 @@ const getOriginalOrderTotalByDayRange = async (req, res) => {
     );
 
     const daylyOrderTotalArray = Object.keys(daylyOrderTotal).map((day) => {
-      console.log(day);
       return {
         day: moment(day, "MM-DD").format("MM-DD"),
         total: daylyOrderTotal[day],
@@ -407,7 +402,6 @@ const getOriginalOrderTotalByMonthRange = async (req, res) => {
 
     const monthlyOrderTotalArray = Object.keys(monthlyOrderTotal).map(
       (month) => {
-        console.log(month);
         return {
           month: month,
           total: monthlyOrderTotal[month],

@@ -5,7 +5,6 @@ const split_years = (startDate, endDate) => {
   endDate = moment(endDate, "YYYY-MM-DD HH:mm").format("YYYY-MM-DD HH:mm");
   const startYear = moment(startDate).year();
   const endYear = moment(endDate).year();
-
   const years = [];
   for (let year = startYear; year <= endYear; year++) {
     let yearStart = moment(`${year}-01-01 00:00`, "YYYY-MM-DD HH:mm").format(
@@ -29,6 +28,12 @@ const split_years = (startDate, endDate) => {
 };
 
 const split_months = (startDate, endDate) => {
+  if (
+    moment(startDate, "YYYY-MM-DD HH:mm").month() ===
+    moment(endDate, "YYYY-MM-DD HH:mm").month()
+  ) {
+    return [{ startDate, endDate }];
+  }
   startDate = moment(startDate, "YYYY-MM-DD HH:mm")
     .startOf("month")
     .format("YYYY-MM-DD HH:mm");
