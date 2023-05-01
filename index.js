@@ -15,6 +15,7 @@ const authRouter = require("./routes/auth");
 const widgetsRouter = require("./routes/widgets");
 const activeLineStatusDetailsRouter = require("./routes/active-line-status-details");
 const orgChartRouter = require("./routes/org-chart");
+const userRouter = require("./routes/userRouter");
 
 app.get("/", (req, res) => {
   res.send("Guitar API");
@@ -25,7 +26,7 @@ app.use("/auth", authRouter);
 app.use("/widgets", widgetsRouter);
 app.use("/alsd", activeLineStatusDetailsRouter);
 app.use("/org", orgChartRouter);
-
+app.use("/user", userRouter);
 const port = process.env.PORT || 3000;
 
 app.listen(port, () => {
