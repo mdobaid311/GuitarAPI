@@ -4,13 +4,14 @@ const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const secretKey = 'secretKey';
 
+
 // FOR SECURE PASSWORD
 const securePassword = async(password) => {
     try {
       const hashedPwd = await bcrypt.hash(password, 3);
       return hashedPwd;
     }catch(error){
-        console.log(error.message);
+        res.status(400).json(error);
     }
 };
 
@@ -35,15 +36,19 @@ const sendMailToUser = async(userName, password, email) => {
         }
         transporter.sendMail(mailOptions, function(error, info){
             if(error){
-                console.log(error);
+                cres.status(400).json(error);
             }
             else{
-                console.log("Email has sent :", info.response);
+                res.status(400).json(
+                    {
+                        message:"Email has sent :",
+                        ifo: info.response
+                    });
             }
         });
 
     } catch (error) {
-        console.log(error.message);
+        res.status(400).json(error);
     }
 }
 
@@ -102,17 +107,17 @@ const userLogin = async(req, res) => {
             }
         });
     } catch (error) {
-        console.log(error.message);
+        res.status(400).json(error);
     }
 };
 
 const userLogout = async(req,res) =>{
     try {
         if (condition) {
-            console.log('hai');
+            res.status(400).json(error);
         }
     } catch (error) {
-        console.log(error.message);
+        res.status(400).json(error);
     }
 };
 
