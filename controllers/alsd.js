@@ -295,7 +295,7 @@ const getOriginalOrderTotalByDayRange = async (req, res) => {
     const { startDate, endDate } = req.query;
     const dates = split_months(startDate, endDate);
     const results = [];
-    console.log(dates)
+    console.log(dates);
     for (let i = 0; i < dates.length; i++) {
       const startYear = moment(dates[i].startDate, "YYYY-MM-DD HH:mm").format(
         "YYYY"
@@ -347,7 +347,13 @@ const getOriginalOrderTotalByDayRange = async (req, res) => {
         total: daylyOrderTotal[day],
       };
     });
-    res.status(200).json({ totalAmount, data: daylyOrderTotalArray });
+    const sortedDaylyOrderTotalArray = daylyOrderTotalArray.sort((a, b) => {
+      return (
+        moment(a.day, "MM-DD").format("YYYYMMDD") -
+        moment(b.day, "MM-DD").format("YYYYMMDD")
+      );
+    });
+    res.status(200).json({ totalAmount, data: sortedDaylyOrderTotalArray });
   } catch (error) {
     res.status(401).json(error);
   }
