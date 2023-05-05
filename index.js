@@ -10,11 +10,13 @@ app.use(morgan("dev"));
 app.use(cors());
 app.use(helmet());
 
-const queryRouter = require("./routes/container-details");
-const authRouter = require("./routes/auth");
-const widgetsRouter = require("./routes/widgets");
-const activeLineStatusDetailsRouter = require("./routes/active-line-status-details");
-const orgChartRouter = require("./routes/org-chart");
+const queryRouter = require("./v1/routes/container-details");
+const authRouter = require("./v1/routes/auth");
+const widgetsRouter = require("./v1/routes/widgets");
+const activeLineStatusDetailsRouter = require("./v1/routes/active-line-status-details");
+const orgChartRouter = require("./v1/routes/org-chart");
+
+const v2ActiveLineStatusDetailsRouter = require("./v2/routes/active_line_status_details");
 
 app.get("/", (req, res) => {
   res.send("Guitar API");
@@ -25,6 +27,8 @@ app.use("/auth", authRouter);
 app.use("/widgets", widgetsRouter);
 app.use("/alsd", activeLineStatusDetailsRouter);
 app.use("/org", orgChartRouter);
+
+app.use("/v2/alsd", v2ActiveLineStatusDetailsRouter);
 
 const port = process.env.PORT || 3000;
 
