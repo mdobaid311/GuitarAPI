@@ -21,3 +21,72 @@ sum(status_quantity) as status_quantity  from active_line_status where order_dat
 
 -- group by day of a month 
  SELECT DATE(order_date_parsed) AS order_day, SUM(original_order_total_amount) AS total_amount, SUM(status_quantity) AS total_quantity FROM active_line_status where DATE_FORMAT(order_date_parsed, '%m - %y') ='01 - 23'GROUP BY order_day order by order_day;
+
+
+-- group by LINE_FULFILLMENT_TYPE
+select LINE_FULFILLMENT_TYPE, sum(original_order_total_amount) as original_order_total_amount ,sum(status_quantity) as status_quantity from active_line_status group by LINE_FULFILLMENT_TYPE;
+
+-- group by ORDER_CAPTURE_CHANNEL
+select ORDER_CAPTURE_CHANNEL, sum(original_order_total_amount) as original_order_total_amount ,sum(status_quantity) as status_quantity from active_line_status group by ORDER_CAPTURE_CHANNEL;
+
+
+{
+    MF:{
+        original_order_total_amount: 0,
+        status_quantity: 0,
+        ORDER_CAPTURE_CHANNEL_GROUPED:[
+            {
+                ORDER_CAPTURE_CHANNEL:"WEB",
+                original_order_total_amount: 0,
+                status_quantity: 0,
+            },
+            {
+                ORDER_CAPTURE_CHANNEL:"MOBILE",
+                original_order_total_amount: 0,
+                status_quantity: 0,
+            },
+            {
+                ORDER_CAPTURE_CHANNEL:"POS",
+                original_order_total_amount: 0,
+                status_quantity: 0,
+            },
+            {
+                ORDER_CAPTURE_CHANNEL:"KIOSK",
+                original_order_total_amount: 0,
+                status_quantity: 0,
+            },
+            {
+                ORDER_CAPTURE_CHANNEL:"CALL_CENTER",
+                original_order_total_amount: 0,
+                status_quantity: 0,
+            },
+            {
+                ORDER_CAPTURE_CHANNEL:"OTHER",
+                original_order_total_amount: 0,
+                status_quantity: 0,
+            }
+        ],
+        LINE_FULFILLMENT_TYPE_GROUPED:[
+            {
+                LINE_FULFILLMENT_TYPE:"PICKUP",
+                original_order_total_amount: 0,
+                status_quantity: 0,
+            },
+            {
+                LINE_FULFILLMENT_TYPE:"DELIVERY",
+                original_order_total_amount: 0,
+                status_quantity: 0,
+            },
+            {
+                LINE_FULFILLMENT_TYPE:"SHIPPED",
+                original_order_total_amount: 0,
+                status_quantity: 0,
+            },
+            {
+                LINE_FULFILLMENT_TYPE:"OTHER",
+                original_order_total_amount: 0,
+                status_quantity: 0,
+            }      
+        ]
+    }
+}

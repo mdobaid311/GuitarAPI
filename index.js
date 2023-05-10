@@ -16,7 +16,7 @@ const widgetsRouter = require("./v1/routes/widgets");
 const activeLineStatusDetailsRouter = require("./v1/routes/active-line-status-details");
 const orgChartRouter = require("./v1/routes/org-chart");
 
-const v2ActiveLineStatusDetailsRouter = require("./v2/routes/active_line_status_details");
+// const v2ActiveLineStatusDetailsRouter = require("./v2/routes/active_line_status_details");
 
 app.get("/", (req, res) => {
   res.send("Guitar API");
@@ -28,7 +28,7 @@ app.use("/widgets", widgetsRouter);
 app.use("/alsd", activeLineStatusDetailsRouter);
 app.use("/org", orgChartRouter);
 
-app.use("/v2/alsd", v2ActiveLineStatusDetailsRouter);
+// app.use("/v2/alsd", v2ActiveLineStatusDetailsRouter);
 
 const port = process.env.PORT || 3000;
 

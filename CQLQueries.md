@@ -1,16 +1,87 @@
-# Get all rows
+CREATE TABLE active_line_status (
+  ORDER_HEADER_KEY varchar(50),
+  ENTERPRISE_KEY varchar(50),
+  ORDER_NO varchar(50),
+  ORDER_LINE_KEY varchar(50),
+  LINE_NO varchar(50),
+  SELLER_ORGANIZATION_CODE varchar(50),
+  ORDER_DATE varchar(50),
+  ORDER_PURPOSE varchar(50),
+  ORDER_TYPE varchar(50),
+  EXCHANGE_TYPE varchar(50),
+  ENTRY_TYPE varchar(50),
+  ORDER_TOTAL_AMOUNT varchar(50),
+  ORIGINAL_ORDER_TOTAL_AMOUNT varchar(50),
+  PAYMENT_STATUS varchar(50),
+  ORDER_CAPTURE_CHANNEL varchar(50),
+  DEPENDENT_ON_LINE_KEY varchar(50),
+  CHAINED_FROM_ORDER_HEADER_KEY varchar(50),
+  CHAINED_FROM_ORDER_LINE_KEY varchar(50),
+  DERIVED_FROM_ORDER_HEADER_KEY varchar(50),
+  DERIVED_FROM_ORDER_LINE_KEY varchar(50),
+  IS_WARRANTY varchar(50),
+  IS_FREE_GIFT_ITEM varchar(50),
+  IS_STORE_CLEARANCE varchar(50),
+  IS_RESTRICT_SHIP_FROM_STORE varchar(50),
+  ORDER_LOS varchar(50),
+  CUSTOMER_ZIP_CODE varchar(50),
+  ORDERED_STORE_ID varchar(50),
+  ORDER_FULFILLMENT_TYPE varchar(50),
+  LINE_FULFILLMENT_TYPE varchar(50),
+  LINE_SHIP_NODE varchar(50),
+  PICKUP_STORE_ID varchar(50),
+  PICK_REQUEST_NODE varchar(50),
+  KIT_CODE varchar(50),
+  LINE_TYPE varchar(50),
+  ITEM_ID varchar(50),
+  PRODUCT_CLASS varchar(50),
+  PRODUCT_LINE varchar(50),
+  RELEASE_NO varchar(50),
+  PICK_REQUEST_NODE_NAME varchar(50),
+  HJ_PICK_REQUEST_NO varchar(50),
+  POS_SALES_TICKET_NO varchar(50),
+  ORIGINAL_ORDERED_QTY varchar(50),
+  UNIT_PRICE varchar(50),
+  ORDERED_QTY varchar(50),
+  STATUS_NAME varchar(50),
+  STATUS varchar(50),
+  STATUS_QUANTITY varchar(50),
+  OTHER_CHARGES varchar(50),
+  LINE_TAX varchar(50),
+  LINE_TOTAL varchar(50),
+  INVOICED_QUANTITY varchar(50),
+  INVOICED_LINE_TOTAL varchar(50),
+  LIST_PRICE varchar(50),
+  LINE_INVOICE_COMPLETE varchar(50),
+  SHIPPED_QUANTITY varchar(50),
+  IS_PRICE_INFO_ONLY varchar(50),
+  INVENTORY_COST varchar(50),
+  CUSTOMER_PROMISE_DATE varchar(50),
+  RESCHEDULE_REQUEST_COUNT varchar(50),
+  BUNDLE_FULFILLMENT_MODE varchar(50),
+  BUNDLE_PARENT_ORDER_LINE_KEY varchar(50),
+  QTY_CANCELLED_IN_SPLIT varchar(50),
+  LINE_CREATETS varchar(50),
+  LINE_MODIFYTS varchar(50),
+  LINE_CREATEPROGID varchar(50),
+  LINE_MODIFYPROGID varchar(50),
+  LINE_CREATEUSERID varchar(50),
+  LINE_MODIFYUSERID varchar(50),
+  ORDER_CREATETS varchar(50),
+  ORDER_MODIFYTS varchar(50),
+  ORDER_CREATEPROGID varchar(50),
+  ORDER_MODIFYPROGID varchar(50),
+  ORDER_CREATEUSERID varchar(50),
+  ORDER_MODIFYUSERID varchar(50),
+  ORDER_RELEASE_CREATETS varchar(50),
+  ORDER_RELEASE_MODIFYTS varchar(50),
+  ORDER_RELEASE_CREATEPROGID varchar(50),
+  ORDER_RELEASE_MODIFYPROGID varchar(50),
+  ORDER_RELEASE_CREATEUSERID varchar(50),
+  ORDER_RELEASE_MODIFYUSERID varchar(50),
+  order_date_parsed varchar(50)
+);
 
-SELECT \* FROM container_details;
+drop table active_line_status;
 
-# Get all rows with a specific CONTAINER_DETAILS_KEY
-
-select \* from container_details where "CONTAINER_DETAILS_KEY"='202211291628342935697871';
-
-# Get
-
-SELECT dateOf(order_date) as order_date,
-       dateTrunc('hour', order_date) as order_hour,
-       sum(original_order_total_amount) as total_sales
-FROM orders
-WHERE order_date >= '2023-04-14 00:00:00' AND order_date < '2023-04-15 00:00:00'
-GROUP BY dateOf(order_date), dateTrunc('hour', order_date)
+select * from active_line_status;
