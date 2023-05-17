@@ -30,63 +30,15 @@ select LINE_FULFILLMENT_TYPE, sum(original_order_total_amount) as original_order
 select ORDER_CAPTURE_CHANNEL, sum(original_order_total_amount) as original_order_total_amount ,sum(status_quantity) as status_quantity from active_line_status group by ORDER_CAPTURE_CHANNEL;
 
 
-{
-    MF:{
-        original_order_total_amount: 0,
-        status_quantity: 0,
-        ORDER_CAPTURE_CHANNEL_GROUPED:[
-            {
-                ORDER_CAPTURE_CHANNEL:"WEB",
-                original_order_total_amount: 0,
-                status_quantity: 0,
-            },
-            {
-                ORDER_CAPTURE_CHANNEL:"MOBILE",
-                original_order_total_amount: 0,
-                status_quantity: 0,
-            },
-            {
-                ORDER_CAPTURE_CHANNEL:"POS",
-                original_order_total_amount: 0,
-                status_quantity: 0,
-            },
-            {
-                ORDER_CAPTURE_CHANNEL:"KIOSK",
-                original_order_total_amount: 0,
-                status_quantity: 0,
-            },
-            {
-                ORDER_CAPTURE_CHANNEL:"CALL_CENTER",
-                original_order_total_amount: 0,
-                status_quantity: 0,
-            },
-            {
-                ORDER_CAPTURE_CHANNEL:"OTHER",
-                original_order_total_amount: 0,
-                status_quantity: 0,
-            }
-        ],
-        LINE_FULFILLMENT_TYPE_GROUPED:[
-            {
-                LINE_FULFILLMENT_TYPE:"PICKUP",
-                original_order_total_amount: 0,
-                status_quantity: 0,
-            },
-            {
-                LINE_FULFILLMENT_TYPE:"DELIVERY",
-                original_order_total_amount: 0,
-                status_quantity: 0,
-            },
-            {
-                LINE_FULFILLMENT_TYPE:"SHIPPED",
-                original_order_total_amount: 0,
-                status_quantity: 0,
-            },
-            {
-                LINE_FULFILLMENT_TYPE:"OTHER",
-                original_order_total_amount: 0,
-                status_quantity: 0,
-            }      
-        ]
-    }
-}
+  SELECT enterprise_key,sec_to_time(time_to_sec(order_date_parsed) - time_to_sec(order_date_parsed)%(15 * 60 OR 60 * 60)) as datetime, sum(original_order_total_amount) as original_order_total_amount, 
+ sum(line_ordered_qty) as line_ordered_qty from order_book_line  
+ 
+
+  select ENTERPRISE_KEY,ORDER_CAPTURE_CHANNEL,LINE_FULFILLMENT_TYPE, sum(original_order_total_amount) as original_order_total_amount ,
+ sum(line_ordered_qty) as line_ordered_qty from order_book_line 
+  group by ENTERPRISE_KEY,ORDER_CAPTURE_CHANNEL,LINE_FULFILLMENT_TYPE;  
+
+   (select enterprise_key,item_id,sum(line_ordered_qty) as line_ordered_qty,sum(original_order_total_amount) as original_order_total_amount
+ from order_book_line where enterprise_key ='GC' group by item_id  order by line_ordered_qty desc limit 4) UNION ALL
+ select enterprise_key,item_id,sum(line_ordered_qty) as line_ordered_qty,sum(original_order_total_amount) as original_order_total_amount
+ from order_book_line where enterprise_key ='MF' group by item_id  order by line_ordered_qty desc limit 8;
