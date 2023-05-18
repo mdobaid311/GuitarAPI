@@ -31,11 +31,12 @@ const getFullSalesData = (req, res) => {
 
   const query = `SELECT getDataNew('${start_date_formatted}','${end_date_formatted}', ${intervaltime},'Ref1', 'Ref2','Ref3', 'Ref4'); FETCH ALL IN "Ref1"; FETCH ALL IN "Ref2"; FETCH ALL IN "Ref3"; FETCH ALL IN "Ref4";
   `;
+console.log(query)
 
   client.query(query, (err, result) => {
     if (err) {
       console.log(err);
-      res.sendStatus(500).send("Error fetching data");
+      res.status(500).send(err);
       return;
     } else {
       const groupedChartSeries = result[2].rows.reduce((acc, order) => {
@@ -76,18 +77,18 @@ const getFullSalesData = (req, res) => {
             enterpriseKeyGroup = {
               name: enterprise_key,
               original_order_total_amount: 0,
-              status_quantity: 0,
+              line_ordered_qty: 0,
               ORDER_CAPTURE_CHANNEL_GROUPED: [],
               LINE_FULFILLMENT_TYPE_GROUPED: [],
             };
             result.push(enterpriseKeyGroup);
           }
 
-          // Update original_order_total_amount and status_quantity
+          // Update original_order_total_amount and line_ordered_qty
           enterpriseKeyGroup.original_order_total_amount += parseInt(
             item.original_order_total_amount
           );
-          enterpriseKeyGroup.status_quantity += parseInt(item.line_ordered_qty);
+          enterpriseKeyGroup.line_ordered_qty += parseInt(item.line_ordered_qty);
 
           // Group by order_capture_channel
           let orderCaptureChannelGroup =
@@ -99,18 +100,18 @@ const getFullSalesData = (req, res) => {
             orderCaptureChannelGroup = {
               name: order_capture_channel,
               original_order_total_amount: 0,
-              status_quantity: 0,
+              line_ordered_qty: 0,
             };
             enterpriseKeyGroup.ORDER_CAPTURE_CHANNEL_GROUPED.push(
               orderCaptureChannelGroup
             );
           }
 
-          // Update original_order_total_amount and status_quantity within the order_capture_channel group
+          // Update original_order_total_amount and line_ordered_qty within the order_capture_channel group
           orderCaptureChannelGroup.original_order_total_amount += parseInt(
             item.original_order_total_amount
           );
-          orderCaptureChannelGroup.status_quantity += parseInt(
+          orderCaptureChannelGroup.line_ordered_qty += parseInt(
             item.line_ordered_qty
           );
 
@@ -124,18 +125,18 @@ const getFullSalesData = (req, res) => {
             lineFulfillmentTypeGroup = {
               name: line_fulfillment_type,
               original_order_total_amount: 0,
-              status_quantity: 0,
+              line_ordered_qty: 0,
             };
             enterpriseKeyGroup.LINE_FULFILLMENT_TYPE_GROUPED.push(
               lineFulfillmentTypeGroup
             );
           }
 
-          // Update original_order_total_amount and status_quantity within the line_fulfillment_type group
+          // Update original_order_total_amount and line_ordered_qty within the line_fulfillment_type group
           lineFulfillmentTypeGroup.original_order_total_amount += parseInt(
             item.original_order_total_amount
           );
-          lineFulfillmentTypeGroup.status_quantity += parseInt(
+          lineFulfillmentTypeGroup.line_ordered_qty += parseInt(
             item.line_ordered_qty
           );
 
@@ -168,7 +169,7 @@ const getFullSalesData = (req, res) => {
           totalStats: {
             ...data.totalStats[1],
             line_margin: +Math.round(data.totalStats[1].line_margin),
-            line_roi: +Math.round(data.totalStats[1].line_roi),
+            line_inventory_cost: +Math.round(data.totalStats[1].line_inventory_cost),
           },
           chartSeries: data.chartSeries[1],
           salesCategories: {
@@ -187,7 +188,7 @@ const getFullSalesData = (req, res) => {
           totalStats: {
             ...data.totalStats[0],
             line_margin: +Math.round(data.totalStats[0].line_margin),
-            line_roi: +Math.round(data.totalStats[0].line_roi),
+            line_inventory_cost: +Math.round(data.totalStats[0].line_inventory_cost),
           },
           chartSeries: data.chartSeries[0],
           salesCategories: {
