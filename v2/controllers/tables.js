@@ -29,9 +29,9 @@ const getFullSalesData = (req, res) => {
 
   console.log(start_date_formatted, end_date_formatted, intervaltime);
 
-  const query = `SELECT getDataNew('${start_date_formatted}','${end_date_formatted}', ${intervaltime},'Ref1', 'Ref2','Ref3', 'Ref4'); FETCH ALL IN "Ref1"; FETCH ALL IN "Ref2"; FETCH ALL IN "Ref3"; FETCH ALL IN "Ref4";
+  const query = `SELECT getsalesdata('${start_date_formatted}','${end_date_formatted}', ${intervaltime},'Ref1', 'Ref2','Ref3', 'Ref4','Ref5', 'Ref6' );FETCH ALL IN "Ref1"; FETCH ALL IN "Ref2"; FETCH ALL IN "Ref3"; FETCH ALL IN "Ref4"; FETCH ALL IN "Ref5"; FETCH ALL IN "Ref6"; 
   `;
-console.log(query)
+  console.log(query);
 
   client.query(query, (err, result) => {
     if (err) {
@@ -39,6 +39,7 @@ console.log(query)
       res.status(500).send(err);
       return;
     } else {
+      console.log(result[5]);
       const groupedChartSeries = result[2].rows.reduce((acc, order) => {
         const enterpriseKey = order.enterprise_key;
 
@@ -88,7 +89,9 @@ console.log(query)
           enterpriseKeyGroup.original_order_total_amount += parseInt(
             item.original_order_total_amount
           );
-          enterpriseKeyGroup.line_ordered_qty += parseInt(item.line_ordered_qty);
+          enterpriseKeyGroup.line_ordered_qty += parseInt(
+            item.line_ordered_qty
+          );
 
           // Group by order_capture_channel
           let orderCaptureChannelGroup =
@@ -156,6 +159,29 @@ console.log(query)
         return result;
       }, {});
 
+      const shippingCost = {
+        gc: result[5].rows.filter(
+          (item) => item.enterprise_key === "GC" && item.is_discount === "N"
+        ),
+        mf: result[5].rows.filter(
+          (item) => item.enterprise_key === "MF" && item.is_discount === "N"
+        ),
+      };
+
+      const discount = {
+        gc: result[5].rows.filter(
+          (item) => item.enterprise_key === "GC" && item.is_discount === "Y"
+        ),
+        mf: result[5].rows.filter(
+          (item) => item.enterprise_key === "MF" && item.is_discount === "Y"
+        ),
+      };
+
+      const tax = {
+        gc: result[6].rows.filter((item) => item.enterprise_key === "GC"),
+        mf: result[6].rows.filter((item) => item.enterprise_key === "MF"),
+      };
+
       const data = {
         totalStats: result[1].rows,
         chartSeries: Object.values(groupedChartSeries),
@@ -169,7 +195,12 @@ console.log(query)
           totalStats: {
             ...data.totalStats[1],
             line_margin: +Math.round(data.totalStats[1].line_margin),
-            line_inventory_cost: +Math.round(data.totalStats[1].line_inventory_cost),
+            line_inventory_cost: +Math.round(
+              data.totalStats[1].line_inventory_cost
+            ),
+            shipping_cost: +Math.round(shippingCost.mf[0].sum),
+            discount: +Math.round(discount.mf[0].sum),
+            tax: +Math.round(tax.mf[0].sum),
           },
           chartSeries: data.chartSeries[1],
           salesCategories: {
@@ -188,7 +219,12 @@ console.log(query)
           totalStats: {
             ...data.totalStats[0],
             line_margin: +Math.round(data.totalStats[0].line_margin),
-            line_inventory_cost: +Math.round(data.totalStats[0].line_inventory_cost),
+            line_inventory_cost: +Math.round(
+              data.totalStats[0].line_inventory_cost
+            ),
+            shipping_cost: +Math.round(shippingCost.gc[0].sum),
+            discount: +Math.round(discount.gc[0].sum),
+            tax: +Math.round(tax.gc[0].sum),
           },
           chartSeries: data.chartSeries[0],
           salesCategories: {
