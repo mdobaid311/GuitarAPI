@@ -29,7 +29,7 @@ const getFullSalesData = (req, res) => {
 
   console.log(start_date_formatted, end_date_formatted, intervaltime);
 
-  const query = `SELECT getsalesdata('${start_date_formatted}','${end_date_formatted}', ${intervaltime},'Ref1', 'Ref2','Ref3', 'Ref4','Ref5', 'Ref6' );FETCH ALL IN "Ref1"; FETCH ALL IN "Ref2"; FETCH ALL IN "Ref3"; FETCH ALL IN "Ref4"; FETCH ALL IN "Ref5"; FETCH ALL IN "Ref6"; 
+  const query = `SELECT getsalesdata('${start_date_formatted}','${end_date_formatted}', ${intervaltime},'Ref1', 'Ref2','Ref3', 'Ref4','Ref5', 'Ref6' );FETCH ALL IN "Ref1"; FETCH ALL IN "Ref2"; FETCH ALL IN "Ref3"; FETCH ALL IN "Ref4"; FETCH ALL IN "Ref5"; FETCH ALL IN "Ref6"; SELECT enterprise_key, sum(original_order_total_amount) AS original_order_total_amount from order_book_header where order_date_parsed>='${start_date_formatted}' and order_date_parsed<='${end_date_formatted}' group by enterprise_key;
   `;
   console.log(query);
 
@@ -39,7 +39,9 @@ const getFullSalesData = (req, res) => {
       res.status(500).send(err);
       return;
     } else {
-      console.log(result[5]);
+      console.log(new Date());
+      console.log(result[7].rows);
+
       const groupedChartSeries = result[2].rows.reduce((acc, order) => {
         const enterpriseKey = order.enterprise_key;
 
@@ -52,7 +54,13 @@ const getFullSalesData = (req, res) => {
         // "2023-01-21T18:30:00.000Z"
         acc[enterpriseKey].series.push({
           enterprise_key: order.enterprise_key,
-          datetime: moment(order.datetime).format("YYYY-MM-DD HH:mm:ss"),
+          datetime:
+            +intervaltime === 86400
+              ? moment(order.datetime).format("YYYY-MM-DD")
+              : +intervaltime === 3600
+              ? moment(order.datetime).format("DD MMM HH:mm")
+              : moment(order.datetime).format("YYYY-MM-DD HH:mm:ss"),
+
           original_order_total_amount: +order.original_order_total_amount,
           line_ordered_qty: +order.line_ordered_qty,
         });
@@ -62,11 +70,7 @@ const getFullSalesData = (req, res) => {
 
       const groupedSalesCategoriesData = result[3].rows.reduce(
         (result, item) => {
-          const {
-            enterprise_key,
-            order_capture_channel,
-            line_fulfillment_type,
-          } = item;
+          const { enterprise_key, order_capture_channel, item_info } = item;
 
           // Find existing enterprise key group
           let enterpriseKeyGroup = result.find(
@@ -80,7 +84,7 @@ const getFullSalesData = (req, res) => {
               original_order_total_amount: 0,
               line_ordered_qty: 0,
               ORDER_CAPTURE_CHANNEL_GROUPED: [],
-              LINE_FULFILLMENT_TYPE_GROUPED: [],
+              ITEM_INFO_GROUPED: [],
             };
             result.push(enterpriseKeyGroup);
           }
@@ -118,30 +122,25 @@ const getFullSalesData = (req, res) => {
             item.line_ordered_qty
           );
 
-          // Group by line_fulfillment_type
-          let lineFulfillmentTypeGroup =
-            enterpriseKeyGroup.LINE_FULFILLMENT_TYPE_GROUPED.find(
-              (group) => group.name === line_fulfillment_type
-            );
+          // Group by ITEM_INFO
+          let itemInfoGroup = enterpriseKeyGroup.ITEM_INFO_GROUPED.find(
+            (group) => group.name === item_info
+          );
 
-          if (!lineFulfillmentTypeGroup) {
-            lineFulfillmentTypeGroup = {
-              name: line_fulfillment_type,
+          if (!itemInfoGroup) {
+            itemInfoGroup = {
+              name: item_info,
               original_order_total_amount: 0,
               line_ordered_qty: 0,
             };
-            enterpriseKeyGroup.LINE_FULFILLMENT_TYPE_GROUPED.push(
-              lineFulfillmentTypeGroup
-            );
+            enterpriseKeyGroup.ITEM_INFO_GROUPED.push(itemInfoGroup);
           }
 
-          // Update original_order_total_amount and line_ordered_qty within the line_fulfillment_type group
-          lineFulfillmentTypeGroup.original_order_total_amount += parseInt(
+          // Update original_order_total_amount and line_ordered_qty within the ITEM_INFO group
+          itemInfoGroup.original_order_total_amount += parseInt(
             item.original_order_total_amount
           );
-          lineFulfillmentTypeGroup.line_ordered_qty += parseInt(
-            item.line_ordered_qty
-          );
+          itemInfoGroup.line_ordered_qty += parseInt(item.line_ordered_qty);
 
           return result;
         },
@@ -198,6 +197,9 @@ const getFullSalesData = (req, res) => {
             line_inventory_cost: +Math.round(
               data.totalStats[1].line_inventory_cost
             ),
+            original_order_total_amount: +Math.round(
+              result[7].rows[1].original_order_total_amount
+            ),
             shipping_cost: +Math.round(shippingCost.mf[0].sum),
             discount: +Math.round(discount.mf[0].sum),
             tax: +Math.round(tax.mf[0].sum),
@@ -208,8 +210,8 @@ const getFullSalesData = (req, res) => {
             ORDER_CAPTURE_CHANNEL_GROUPED: Object.values(
               data.salesCategories[1].ORDER_CAPTURE_CHANNEL_GROUPED
             ),
-            LINE_FULFILLMENT_TYPE_GROUPED: Object.values(
-              data.salesCategories[1].LINE_FULFILLMENT_TYPE_GROUPED
+            ITEM_INFO_GROUPED: Object.values(
+              data.salesCategories[1].ITEM_INFO_GROUPED
             ),
           },
           topItemsData: data.topItemsData[1],
@@ -222,6 +224,9 @@ const getFullSalesData = (req, res) => {
             line_inventory_cost: +Math.round(
               data.totalStats[0].line_inventory_cost
             ),
+            original_order_total_amount: +Math.round(
+              result[7].rows[0].original_order_total_amount
+            ),
             shipping_cost: +Math.round(shippingCost.gc[0].sum),
             discount: +Math.round(discount.gc[0].sum),
             tax: +Math.round(tax.gc[0].sum),
@@ -232,8 +237,8 @@ const getFullSalesData = (req, res) => {
             ORDER_CAPTURE_CHANNEL_GROUPED: Object.values(
               data.salesCategories[0].ORDER_CAPTURE_CHANNEL_GROUPED
             ),
-            LINE_FULFILLMENT_TYPE_GROUPED: Object.values(
-              data.salesCategories[0].LINE_FULFILLMENT_TYPE_GROUPED
+            ITEM_INFO_GROUPED: Object.values(
+              data.salesCategories[0].ITEM_INFO_GROUPED
             ),
           },
           topItemsData: data.topItemsData[0],
