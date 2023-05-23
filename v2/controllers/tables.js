@@ -193,7 +193,9 @@ const getFullSalesData = (req, res) => {
           name: "MF",
           totalStats: {
             ...data.totalStats[1],
-            line_margin: +Math.round(data.totalStats[1].line_margin),
+            line_margin: +Math.round(data.totalStats[1].line_margin)
+              ? +Math.round(data.totalStats[1].line_margin)
+              : 0,
             line_inventory_cost: +Math.round(
               data.totalStats[1].line_inventory_cost
             ),
@@ -220,7 +222,9 @@ const getFullSalesData = (req, res) => {
           name: "GC",
           totalStats: {
             ...data.totalStats[0],
-            line_margin: +Math.round(data.totalStats[0].line_margin),
+            line_margin: +Math.round(data.totalStats[0].line_margin)
+              ? +Math.round(data.totalStats[0].line_margin)
+              : 0,
             line_inventory_cost: +Math.round(
               data.totalStats[0].line_inventory_cost
             ),
