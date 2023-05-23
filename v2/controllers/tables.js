@@ -188,7 +188,7 @@ const getFullSalesData = (req, res) => {
           salesCategories: groupedSalesCategoriesData,
           topItemsData: Object.values(groupedTopItemsData),
         };
-        console.log(totalStats[1]);
+        console.log(data.totalStats[1]);
         res.status(200).json({
           MFData: {
             name: "MF",
