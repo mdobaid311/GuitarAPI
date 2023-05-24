@@ -1,4 +1,5 @@
 const moment = require("moment");
+const client = require("../config/postgre_client");
 // const connection = require("../config/mysql_client");
 
 // const getSalesData = async (req, res) => {
@@ -392,6 +393,7 @@ const moment = require("moment");
 // };
 
 const getFullSalesData = async (req, res) => {
+ 
   const data = {
     MFData: {
       name: "MF",

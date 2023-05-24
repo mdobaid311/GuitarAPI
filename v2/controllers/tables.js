@@ -15,6 +15,11 @@ const getTableData = (req, res) => {
 };
 
 const getFullSalesData = (req, res) => {
+  // if (client.connection._events != null) {
+  //   client.end();
+  //   client.connect();
+  // }
+
   const start_date = req.query.start_date;
   const end_date = req.query.end_date;
   const intervaltime = req.query.intervaltime;
@@ -27,12 +32,11 @@ const getFullSalesData = (req, res) => {
     "YYYY-MM-DD HH:mm:ss"
   );
 
-  console.log(start_date_formatted, end_date_formatted, intervaltime);
-
+  console.log(new Date());
   const query = `SELECT getsalesdata('${start_date_formatted}','${end_date_formatted}', ${intervaltime},'Ref1', 'Ref2','Ref3', 'Ref4','Ref5', 'Ref6' );FETCH ALL IN "Ref1"; FETCH ALL IN "Ref2"; FETCH ALL IN "Ref3"; FETCH ALL IN "Ref4"; FETCH ALL IN "Ref5"; FETCH ALL IN "Ref6"; SELECT enterprise_key, sum(original_order_total_amount) AS original_order_total_amount from order_book_header where order_date_parsed>='${start_date_formatted}' and order_date_parsed<='${end_date_formatted}' group by enterprise_key;
   `;
-  console.log(query);
 
+  console.log(query)
   try {
     client.query(query, (err, result) => {
       if (err) {
@@ -188,7 +192,8 @@ const getFullSalesData = (req, res) => {
           salesCategories: groupedSalesCategoriesData,
           topItemsData: Object.values(groupedTopItemsData),
         };
-        console.log(data.totalStats[1]);
+
+        console.log(new Date());
         res.status(200).json({
           MFData: {
             name: "MF",
