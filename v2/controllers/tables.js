@@ -36,7 +36,7 @@ const getFullSalesData = (req, res) => {
   const query = `SELECT getsalesdata('${start_date_formatted}','${end_date_formatted}', ${intervaltime},'Ref1', 'Ref2','Ref3', 'Ref4','Ref5', 'Ref6' );FETCH ALL IN "Ref1"; FETCH ALL IN "Ref2"; FETCH ALL IN "Ref3"; FETCH ALL IN "Ref4"; FETCH ALL IN "Ref5"; FETCH ALL IN "Ref6"; SELECT enterprise_key, sum(original_order_total_amount) AS original_order_total_amount from order_book_header where order_date_parsed>='${start_date_formatted}' and order_date_parsed<='${end_date_formatted}' group by enterprise_key;
   `;
 
-  console.log(query)
+  console.log(query);
   try {
     client.query(query, (err, result) => {
       if (err) {
@@ -63,8 +63,10 @@ const getFullSalesData = (req, res) => {
               +intervaltime === 86400
                 ? moment(order.datetime).format("YYYY-MM-DD")
                 : +intervaltime === 3600
-                ? moment(order.datetime).format("DD MMM HH:mm")
-                : moment(order.datetime).format("YYYY-MM-DD HH:mm:ss"),
+                ? +intervaltime === 172800
+                  ? moment(order.datetime).format("YYYY-MON")
+                  : moment(order.datetime).format("YYYY-MM-DD HH:mm")
+                : moment(order.datetime).format("YYYY-MM-DD HH:mm"),
 
             original_order_total_amount: +order.original_order_total_amount,
             line_ordered_qty: +order.line_ordered_qty,
