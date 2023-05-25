@@ -60,6 +60,16 @@ const getFullSalesData = (req, res) => {
               series: [],
             };
           }
+
+          console.log(
+            +intervaltime === 86400
+              ? moment(order.datetime).format("YYYY-MM-DD")
+              : +intervaltime === 3600
+              ? +intervaltime === 172800
+                ? moment(order.datetime).format("YYYY-MON")
+                : moment(order.datetime).format("YYYY-MM-DD HH:mm")
+              : moment(order.datetime).format("YYYY-MM-DD HH:mm")
+          );
           // "2023-01-21T18:30:00.000Z"
           acc[enterpriseKey].series.push({
             enterprise_key: order.enterprise_key,
@@ -79,7 +89,7 @@ const getFullSalesData = (req, res) => {
           return acc;
         }, {});
 
-        console.log(result[3].rows);
+      
 
         const groupedSalesCategoriesData = result[3].rows.reduce(
           (result, item) => {
