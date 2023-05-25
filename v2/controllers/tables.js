@@ -233,14 +233,14 @@ const getFullSalesData = (req, res) => {
                 ? Object.values(
                     data.salesCategories[1]?.ORDER_CAPTURE_CHANNEL_GROUPED
                   )
-                : null,
+                : {},
               ITEM_INFO_GROUPED: Object.values(
                 data.salesCategories[1]?.ITEM_INFO_GROUPED
               )
                 ? Object.values(data.salesCategories[1]?.ITEM_INFO_GROUPED)
-                : null,
+                : {},
             },
-            topItemsData: data.topItemsData[1] ? data.topItemsData[1] : null,
+            topItemsData: data.topItemsData[1] ? data.topItemsData[1] : {},
           },
           GCData: {
             name: "GC",
@@ -278,14 +278,14 @@ const getFullSalesData = (req, res) => {
                 ? Object.values(
                     data.salesCategories[0]?.ORDER_CAPTURE_CHANNEL_GROUPED
                   )
-                : null,
+                : {},
               ITEM_INFO_GROUPED: Object.values(
                 data.salesCategories[0]?.ITEM_INFO_GROUPED
               )
                 ? Object.values(data.salesCategories[0]?.ITEM_INFO_GROUPED)
-                : null,
+                : {},
             },
-            topItemsData: data.topItemsData[0] ? data.topItemsData[0] : null,
+            topItemsData: data.topItemsData[0] ? data.topItemsData[0] : {},
           },
         });
       }
