@@ -269,10 +269,11 @@ const getFullSalesData = (req, res) => {
             chartSeries: data.chartSeries[0],
             salesCategories: {
               ...data.salesCategories[0],
-              ORDER_CAPTURE_CHANNEL_GROUPED: Object.values(
-                data.salesCategories[0]?.ORDER_CAPTURE_CHANNEL_GROUPED
-              )
-                ? data.salesCategories[0]?.ORDER_CAPTURE_CHANNEL_GROUPED
+              ORDER_CAPTURE_CHANNEL_GROUPED: data.salesCategories[0]
+                ?.ORDER_CAPTURE_CHANNEL_GROUPED
+                ? Object.values(
+                    data.salesCategories[0]?.ORDER_CAPTURE_CHANNEL_GROUPED
+                  )
                 : [],
               ITEM_INFO_GROUPED: data.salesCategories[0]?.ITEM_INFO_GROUPED
                 ? Object.values(data.salesCategories[0]?.ITEM_INFO_GROUPED)
