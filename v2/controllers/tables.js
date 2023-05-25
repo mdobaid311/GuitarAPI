@@ -32,7 +32,15 @@ const getFullSalesData = (req, res) => {
     "YYYY-MM-DD HH:mm:ss"
   );
 
-  const query = `SELECT getsalesdata('${start_date_formatted}','${end_date_formatted}', ${intervaltime},'Ref1', 'Ref2','Ref3', 'Ref4','Ref5', 'Ref6' );FETCH ALL IN "Ref1"; FETCH ALL IN "Ref2"; FETCH ALL IN "Ref3"; FETCH ALL IN "Ref4"; FETCH ALL IN "Ref5"; FETCH ALL IN "Ref6"; SELECT enterprise_key, sum(original_order_total_amount) AS original_order_total_amount from order_book_header where order_date_parsed>='${start_date_formatted}' and order_date_parsed<='${end_date_formatted}' group by enterprise_key;
+  const query = `SELECT gettotalsalesdata('${start_date_formatted}','${end_date_formatted}', ${intervaltime},'Ref1', 'Ref2','Ref3', 'Ref4','Ref5', 'Ref6','Ref7', 'Ref8');
+  FETCH ALL IN "Ref1";
+  FETCH ALL IN "Ref2";
+  FETCH ALL IN "Ref3";
+  FETCH ALL IN "Ref4";
+  FETCH ALL IN "Ref5";
+  FETCH ALL IN "Ref6";
+  FETCH ALL IN "Ref7";
+  FETCH ALL IN "Ref8";
   `;
 
   console.log(query);
@@ -150,16 +158,44 @@ const getFullSalesData = (req, res) => {
           []
         );
 
-        const groupedTopItemsData = result[4].rows.reduce((result, item) => {
-          const { enterprise_key, ...rest } = item;
+        const groupedTopItemsDataByVolume = result[4].rows.reduce(
+          (result, item) => {
+            const { enterprise_key, ...rest } = item;
 
-          if (!result[enterprise_key]) {
-            result[enterprise_key] = [];
-          }
+            if (!result[enterprise_key]) {
+              result[enterprise_key] = [];
+            }
 
-          result[enterprise_key].push(rest);
-          return result;
-        }, {});
+            result[enterprise_key].push(rest);
+            return result;
+          },
+          {}
+        );
+
+        const groupedTopItemsDataByValue = result[8].rows.reduce(
+          (result, item) => {
+            const { enterprise_key, ...rest } = item;
+
+            if (!result[enterprise_key]) {
+              result[enterprise_key] = [];
+            }
+
+            result[enterprise_key].push(rest);
+            return result;
+          },
+          {}
+        );
+
+        const groupedTopItemData = {
+          mf: {
+            byVolume: groupedTopItemsDataByVolume["MF"],
+            byValue: groupedTopItemsDataByValue["MF"],
+          },
+          gc: {
+            byVolume: groupedTopItemsDataByVolume["GC"],
+            byValue: groupedTopItemsDataByValue["GC"],
+          },
+        };
 
         const shippingCost = {
           gc: result[5].rows.filter(
@@ -188,7 +224,7 @@ const getFullSalesData = (req, res) => {
           totalStats: result[1].rows,
           chartSeries: Object.values(groupedChartSeries),
           salesCategories: groupedSalesCategoriesData,
-          topItemsData: Object.values(groupedTopItemsData),
+          topItemsData: groupedTopItemData,
         };
 
         res.status(200).json({
@@ -232,7 +268,7 @@ const getFullSalesData = (req, res) => {
                 ? Object.values(data.salesCategories[1]?.ITEM_INFO_GROUPED)
                 : [],
             },
-            topItemsData: data.topItemsData[1] ? data.topItemsData[1] : [],
+            topItemsData: groupedTopItemData.mf,
           },
           GCData: {
             name: "GC",
@@ -274,7 +310,7 @@ const getFullSalesData = (req, res) => {
                 ? Object.values(data.salesCategories[0]?.ITEM_INFO_GROUPED)
                 : [],
             },
-            topItemsData: data.topItemsData[0] ? data.topItemsData[0] : [],
+            topItemsData: groupedTopItemData.gc,
           },
         });
       }
