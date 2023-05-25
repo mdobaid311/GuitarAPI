@@ -206,13 +206,21 @@ const getFullSalesData = (req, res) => {
                 : 0,
               line_inventory_cost: +Math.round(
                 data.totalStats[1].line_inventory_cost
-              ),
+              )
+                ? +Math.round(data.totalStats[1].line_inventory_cost)
+                : 0,
               original_order_total_amount: +Math.round(
                 result[7].rows[1].original_order_total_amount
-              ),
-              shipping_cost: +Math.round(shippingCost.mf[0].sum),
-              discount: +Math.round(discount.mf[0].sum),
-              tax: +Math.round(tax.mf[0].sum),
+              )
+                ? +Math.round(result[7].rows[1].original_order_total_amount)
+                : 0,
+              shipping_cost: +Math.round(shippingCost.mf[0].sum)
+                ? +Math.round(shippingCost.mf[0].sum)
+                : 0,
+              discount: +Math.round(discount.mf[0].sum)
+                ? +Math.round(discount.mf[0].sum)
+                : 0,
+              tax: +Math.round(tax.mf[0].sum) ? +Math.round(tax.mf[0].sum) : 0,
             },
             chartSeries: data.chartSeries[1],
             salesCategories: {
@@ -235,13 +243,21 @@ const getFullSalesData = (req, res) => {
                 : 0,
               line_inventory_cost: +Math.round(
                 data.totalStats[0].line_inventory_cost
-              ),
+              )
+                ? +Math.round(data.totalStats[0].line_inventory_cost)
+                : 0,
               original_order_total_amount: +Math.round(
                 result[7].rows[0].original_order_total_amount
-              ),
-              shipping_cost: +Math.round(shippingCost.gc[0].sum),
-              discount: +Math.round(discount.gc[0].sum),
-              tax: +Math.round(tax.gc[0].sum),
+              )
+                ? +Math.round(result[7].rows[0].original_order_total_amount)
+                : 0,
+              shipping_cost: +Math.round(shippingCost.gc[0].sum)
+                ? +Math.round(shippingCost.gc[0].sum)
+                : 0,
+              discount: +Math.round(discount.gc[0].sum)
+                ? +Math.round(discount.gc[0].sum)
+                : 0,
+              tax: +Math.round(tax.gc[0].sum) ? +Math.round(tax.gc[0].sum) : 0,
             },
             chartSeries: data.chartSeries[0],
             salesCategories: {
