@@ -228,13 +228,19 @@ const getFullSalesData = (req, res) => {
             salesCategories: {
               ...data.salesCategories[1],
               ORDER_CAPTURE_CHANNEL_GROUPED: Object.values(
-                data.salesCategories[1].ORDER_CAPTURE_CHANNEL_GROUPED
-              ),
+                data.salesCategories[1]?.ORDER_CAPTURE_CHANNEL_GROUPED
+              )
+                ? Object.values(
+                    data.salesCategories[1]?.ORDER_CAPTURE_CHANNEL_GROUPED
+                  )
+                : null,
               ITEM_INFO_GROUPED: Object.values(
-                data.salesCategories[1].ITEM_INFO_GROUPED
-              ),
+                data.salesCategories[1]?.ITEM_INFO_GROUPED
+              )
+                ? Object.values(data.salesCategories[1]?.ITEM_INFO_GROUPED)
+                : null,
             },
-            topItemsData: data.topItemsData[1],
+            topItemsData: data.topItemsData[1] ? data.topItemsData[1] : null,
           },
           GCData: {
             name: "GC",
@@ -259,19 +265,27 @@ const getFullSalesData = (req, res) => {
               discount: +Math.round(discount.gc[0]?.sum)
                 ? +Math.round(discount.gc[0]?.sum)
                 : 0,
-              tax: +Math.round(tax.gc[0]?.sum) ? +Math.round(tax.gc[0]?.sum) : 0,
+              tax: +Math.round(tax.gc[0]?.sum)
+                ? +Math.round(tax.gc[0]?.sum)
+                : 0,
             },
             chartSeries: data.chartSeries[0],
             salesCategories: {
               ...data.salesCategories[0],
               ORDER_CAPTURE_CHANNEL_GROUPED: Object.values(
-                data.salesCategories[0].ORDER_CAPTURE_CHANNEL_GROUPED
-              ),
+                data.salesCategories[0]?.ORDER_CAPTURE_CHANNEL_GROUPED
+              )
+                ? Object.values(
+                    data.salesCategories[0]?.ORDER_CAPTURE_CHANNEL_GROUPED
+                  )
+                : null,
               ITEM_INFO_GROUPED: Object.values(
-                data.salesCategories[0].ITEM_INFO_GROUPED
-              ),
+                data.salesCategories[0]?.ITEM_INFO_GROUPED
+              )
+                ? Object.values(data.salesCategories[0]?.ITEM_INFO_GROUPED)
+                : null,
             },
-            topItemsData: data.topItemsData[0],
+            topItemsData: data.topItemsData[0] ? data.topItemsData[0] : null,
           },
         });
       }
