@@ -9,15 +9,6 @@ const credentials = {
   keepAlive:true,
   idle_timeout:7200,
 };
-// const credentials = {
-//   user: "postgres",
-//   host: "43.204.234.254",
-//   database: "postgres",
-//   password: "admin",
-//   port: 5432,
-//   keepAlive:true,
-//   idle_timeout:7200,
-// };
 
 // Create a connection pool
 const client = new Client(credentials);
