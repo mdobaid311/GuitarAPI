@@ -79,9 +79,16 @@ const getFullSalesData = (req, res) => {
           return acc;
         }, {});
 
+        console.log(result[3].rows);
+
         const groupedSalesCategoriesData = result[3].rows.reduce(
           (result, item) => {
-            const { enterprise_key, order_capture_channel, item_info } = item;
+            const {
+              enterprise_key,
+              order_capture_channel,
+              item_info,
+              line_fulfillment_type,
+            } = item;
 
             // Find existing enterprise key group
             let enterpriseKeyGroup = result.find(
@@ -96,6 +103,7 @@ const getFullSalesData = (req, res) => {
                 line_ordered_qty: 0,
                 ORDER_CAPTURE_CHANNEL_GROUPED: [],
                 ITEM_INFO_GROUPED: [],
+                LINE_FULFILLMENT_TYPE_GROUPED: [],
               };
               result.push(enterpriseKeyGroup);
             }
@@ -152,6 +160,31 @@ const getFullSalesData = (req, res) => {
               item.original_order_total_amount
             );
             itemInfoGroup.line_ordered_qty += parseInt(item.line_ordered_qty);
+
+            // Group by LINE_FULFILLMENT_TYPE
+            let lineFulfillmentTypeGroup =
+              enterpriseKeyGroup.LINE_FULFILLMENT_TYPE_GROUPED.find(
+                (group) => group.name === line_fulfillment_type
+              );
+
+            if (!lineFulfillmentTypeGroup) {
+              lineFulfillmentTypeGroup = {
+                name: line_fulfillment_type,
+                original_order_total_amount: 0,
+                line_ordered_qty: 0,
+              };
+              enterpriseKeyGroup.LINE_FULFILLMENT_TYPE_GROUPED.push(
+                lineFulfillmentTypeGroup
+              );
+            }
+
+            // Update original_order_total_amount and line_ordered_qty within the LINE_FULFILLMENT_TYPE group
+            lineFulfillmentTypeGroup.original_order_total_amount += parseInt(
+              item.original_order_total_amount
+            );
+            lineFulfillmentTypeGroup.line_ordered_qty += parseInt(
+              item.line_ordered_qty
+            );
 
             return result;
           },
@@ -319,7 +352,6 @@ const getFullSalesData = (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 const getFullSalesDataTEST = (req, res) => {
   // if (client.connection._events != null) {
   //   client.end();
@@ -385,9 +417,16 @@ const getFullSalesDataTEST = (req, res) => {
           return acc;
         }, {});
 
+        console.log(result[3].rows);
+
         const groupedSalesCategoriesData = result[3].rows.reduce(
           (result, item) => {
-            const { enterprise_key, order_capture_channel, item_info } = item;
+            const {
+              enterprise_key,
+              order_capture_channel,
+              item_info,
+              line_fulfillment_type,
+            } = item;
 
             // Find existing enterprise key group
             let enterpriseKeyGroup = result.find(
@@ -402,6 +441,7 @@ const getFullSalesDataTEST = (req, res) => {
                 line_ordered_qty: 0,
                 ORDER_CAPTURE_CHANNEL_GROUPED: [],
                 ITEM_INFO_GROUPED: [],
+                LINE_FULFILLMENT_TYPE_GROUPED: [],
               };
               result.push(enterpriseKeyGroup);
             }
@@ -458,6 +498,31 @@ const getFullSalesDataTEST = (req, res) => {
               item.original_order_total_amount
             );
             itemInfoGroup.line_ordered_qty += parseInt(item.line_ordered_qty);
+
+            // Group by LINE_FULFILLMENT_TYPE
+            let lineFulfillmentTypeGroup =
+              enterpriseKeyGroup.LINE_FULFILLMENT_TYPE_GROUPED.find(
+                (group) => group.name === line_fulfillment_type
+              );
+
+            if (!lineFulfillmentTypeGroup) {
+              lineFulfillmentTypeGroup = {
+                name: line_fulfillment_type,
+                original_order_total_amount: 0,
+                line_ordered_qty: 0,
+              };
+              enterpriseKeyGroup.LINE_FULFILLMENT_TYPE_GROUPED.push(
+                lineFulfillmentTypeGroup
+              );
+            }
+
+            // Update original_order_total_amount and line_ordered_qty within the LINE_FULFILLMENT_TYPE group
+            lineFulfillmentTypeGroup.original_order_total_amount += parseInt(
+              item.original_order_total_amount
+            );
+            lineFulfillmentTypeGroup.line_ordered_qty += parseInt(
+              item.line_ordered_qty
+            );
 
             return result;
           },
