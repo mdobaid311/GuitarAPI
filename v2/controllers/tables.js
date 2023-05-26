@@ -32,7 +32,7 @@ const getFullSalesData = (req, res) => {
     "YYYY-MM-DD HH:mm:ss"
   );
 
-  const query = `SELECT gettotalsalesdata('${start_date_formatted}','${end_date_formatted}', ${intervaltime},'Ref1', 'Ref2','Ref3', 'Ref4','Ref5', 'Ref6','Ref7', 'Ref8');
+  const query = `SELECT gettotalsalesdata('${start_date_formatted}','${end_date_formatted}', ${intervaltime},'Ref1', 'Ref2','Ref3', 'Ref4','Ref5', 'Ref6','Ref7', 'Ref8' );
   FETCH ALL IN "Ref1";
   FETCH ALL IN "Ref2";
   FETCH ALL IN "Ref3";
@@ -41,7 +41,7 @@ const getFullSalesData = (req, res) => {
   FETCH ALL IN "Ref6";
   FETCH ALL IN "Ref7";
   FETCH ALL IN "Ref8";
-  `;
+   `;
 
   console.log(query);
   try {
@@ -60,16 +60,6 @@ const getFullSalesData = (req, res) => {
               series: [],
             };
           }
-
-          console.log(
-            +(intervaltime ?? 0) === 86400
-              ? moment(order.datetime).format("YYYY-MM-DD")
-              : +(intervaltime ?? 0) === 3600
-              ? +(intervaltime ?? 0) === 172800
-                ? moment(order.datetime).format("YYYY-MON")
-                : moment(order.datetime).format("YYYY-MM-DD HH:mm")
-              : moment(order.datetime).format("YYYY-MM-DD HH:mm")
-          );
           // "2023-01-21T18:30:00.000Z"
           acc[enterpriseKey].series.push({
             enterprise_key: order.enterprise_key,
