@@ -189,6 +189,8 @@ const getFullSalesData = (req, res) => {
           []
         );
 
+        console.log(result[3].rows)
+
         const groupedTopItemsDataByVolume = result[4].rows.reduce(
           (result, item) => {
             const { enterprise_key, ...rest } = item;
