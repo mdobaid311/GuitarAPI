@@ -62,10 +62,10 @@ const getFullSalesData = (req, res) => {
           }
 
           console.log(
-            +intervaltime === 86400
+            +(intervaltime ?? 0) === 86400
               ? moment(order.datetime).format("YYYY-MM-DD")
-              : +intervaltime === 3600
-              ? +intervaltime === 172800
+              : +(intervaltime ?? 0) === 3600
+              ? +(intervaltime ?? 0) === 172800
                 ? moment(order.datetime).format("YYYY-MON")
                 : moment(order.datetime).format("YYYY-MM-DD HH:mm")
               : moment(order.datetime).format("YYYY-MM-DD HH:mm")
@@ -74,10 +74,10 @@ const getFullSalesData = (req, res) => {
           acc[enterpriseKey].series.push({
             enterprise_key: order.enterprise_key,
             datetime:
-              +intervaltime === 86400
+              +(intervaltime ?? 0) === 86400
                 ? moment(order.datetime).format("YYYY-MM-DD")
-                : +intervaltime === 3600
-                ? +intervaltime === 172800
+                : +(intervaltime ?? 0) === 3600
+                ? +(intervaltime ?? 0) === 172800
                   ? moment(order.datetime).format("YYYY-MON")
                   : moment(order.datetime).format("YYYY-MM-DD HH:mm")
                 : moment(order.datetime).format("YYYY-MM-DD HH:mm"),
@@ -88,8 +88,6 @@ const getFullSalesData = (req, res) => {
 
           return acc;
         }, {});
-
-      
 
         const groupedSalesCategoriesData = result[3].rows.reduce(
           (result, item) => {

@@ -92,7 +92,6 @@ const getOrgChartDataRange = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
     const dates = split_years(startDate, endDate);
-    console.log(dates);
     const results = [];
     for (let i = 0; i < dates.length; i++) {
       const startYear = moment(dates[i].startDate, "YYYY-MM-DD HH:mm").format(
@@ -126,6 +125,7 @@ const getOrgChartDataRange = async (req, res) => {
         }
 
         const result = await client.execute(query, [], options);
+        console.log(result.rows)
         records = records.concat(result.rows);
         pageState = result.pageState;
       } while (pageState);
@@ -192,5 +192,6 @@ const getOrgChartDataRange = async (req, res) => {
 };
 
 module.exports = {
-  getOrgChartData,getOrgChartDataRange
+  getOrgChartData,
+  getOrgChartDataRange,
 };
