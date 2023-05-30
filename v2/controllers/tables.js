@@ -1,5 +1,9 @@
 const client = require("../config/postgre_client");
 const moment = require("moment");
+const {
+  formatDate,
+  getFulfillmentDescription,
+} = require("../utils/fulfillment_type_details");
 
 const getTableData = (req, res) => {
   const { table } = req.query;
@@ -51,7 +55,7 @@ const getFullSalesData = (req, res) => {
         res.status(500).send(err);
         return;
       } else {
-        const groupedChartSeries = result[2].rows.reduce((acc, order) => {
+        const groupedChartSeries = result[2].rows.reduce((acc, order, i) => {
           const enterpriseKey = order.enterprise_key;
 
           if (!acc[enterpriseKey]) {
@@ -59,19 +63,12 @@ const getFullSalesData = (req, res) => {
               enterprise_key: enterpriseKey,
               series: [],
             };
+            i = 0;
           }
-          // "2023-01-21T18:30:00.000Z"
+
           acc[enterpriseKey].series.push({
             enterprise_key: order.enterprise_key,
-            datetime:
-              +(intervaltime ?? 0) === 86400
-                ? moment(order.datetime).format("YYYY-MM-DD")
-                : +(intervaltime ?? 0) === 3600
-                ? +(intervaltime ?? 0) === 172800
-                  ? moment(order.datetime).format("YYYY-MON")
-                  : moment(order.datetime).format("YYYY-MM-DD HH:mm")
-                : moment(order.datetime).format("YYYY-MM-DD HH:mm"),
-
+            datetime: formatDate(order.datetime, intervaltime, i),
             original_order_total_amount: +order.original_order_total_amount,
             line_ordered_qty: +order.line_ordered_qty,
           });
@@ -162,12 +159,14 @@ const getFullSalesData = (req, res) => {
             // Group by LINE_FULFILLMENT_TYPE
             let lineFulfillmentTypeGroup =
               enterpriseKeyGroup.LINE_FULFILLMENT_TYPE_GROUPED.find(
-                (group) => group.name === line_fulfillment_type
+                (group) =>
+                  group.name ===
+                  getFulfillmentDescription(line_fulfillment_type)
               );
 
             if (!lineFulfillmentTypeGroup) {
               lineFulfillmentTypeGroup = {
-                name: line_fulfillment_type,
+                name: getFulfillmentDescription(line_fulfillment_type),
                 original_order_total_amount: 0,
                 line_ordered_qty: 0,
               };
@@ -189,7 +188,7 @@ const getFullSalesData = (req, res) => {
           []
         );
 
-        console.log(result[3].rows)
+        console.log(result[3].rows);
 
         const groupedTopItemsDataByVolume = result[4].rows.reduce(
           (result, item) => {
@@ -389,7 +388,7 @@ const getFullSalesDataTEST = (req, res) => {
         res.status(500).send(err);
         return;
       } else {
-        const groupedChartSeries = result[2].rows.reduce((acc, order) => {
+        const groupedChartSeries = result[2].rows.reduce((acc, order, i) => {
           const enterpriseKey = order.enterprise_key;
 
           if (!acc[enterpriseKey]) {
@@ -397,27 +396,18 @@ const getFullSalesDataTEST = (req, res) => {
               enterprise_key: enterpriseKey,
               series: [],
             };
+            i = 0;
           }
           // "2023-01-21T18:30:00.000Z"
           acc[enterpriseKey].series.push({
             enterprise_key: order.enterprise_key,
-            datetime:
-              +intervaltime === 86400
-                ? moment(order.datetime).format("YYYY-MM-DD")
-                : +intervaltime === 3600
-                ? +intervaltime === 172800
-                  ? moment(order.datetime).format("YYYY-MON")
-                  : moment(order.datetime).format("YYYY-MM-DD HH:mm")
-                : moment(order.datetime).format("YYYY-MM-DD HH:mm"),
-
+            datetime: formatDate(order.datetime, intervaltime),
             original_order_total_amount: +order.original_order_total_amount,
             line_ordered_qty: +order.line_ordered_qty,
           });
 
           return acc;
         }, {});
-
-        console.log(result[3].rows);
 
         const groupedSalesCategoriesData = result[3].rows.reduce(
           (result, item) => {
@@ -502,12 +492,14 @@ const getFullSalesDataTEST = (req, res) => {
             // Group by LINE_FULFILLMENT_TYPE
             let lineFulfillmentTypeGroup =
               enterpriseKeyGroup.LINE_FULFILLMENT_TYPE_GROUPED.find(
-                (group) => group.name === line_fulfillment_type
+                (group) =>
+                  group.name ===
+                  getFulfillmentDescription(line_fulfillment_type)
               );
 
             if (!lineFulfillmentTypeGroup) {
               lineFulfillmentTypeGroup = {
-                name: line_fulfillment_type,
+                name: getFulfillmentDescription(line_fulfillment_type),
                 original_order_total_amount: 0,
                 line_ordered_qty: 0,
               };
