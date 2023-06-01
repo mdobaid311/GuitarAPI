@@ -1,5 +1,7 @@
 const express = require("express");
-const { getTableData, getFullSalesData, getFullSalesDataTEST, getCustomQueryDate, UserLogin, getMinMaxValues } = require("../controllers/tables");
+ 
+const { getTableData, getFullSalesData, getFullSalesDataTEST, UserLogin, getMinMaxValues, UserRegistration,getCustomQueryDate } = require("../controllers/tables");
+ 
  
 
 const router = express.Router();
@@ -10,6 +12,6 @@ router.get("/getFullSalesDatatest",getFullSalesDataTEST )
 router.post("/query",getCustomQueryDate)
 router.post("/login", UserLogin)
 router.get("/getMinMaxValues", getMinMaxValues)
-
+router.post("/register", UserRegistration)
 
 module.exports = router;

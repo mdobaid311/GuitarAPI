@@ -4,6 +4,7 @@ const {
   formatDate,
   getFulfillmentDescription,
 } = require("../utils/fulfillment_type_details");
+const { tryEach } = require("async");
 
 const getTableData = (req, res) => {
   const { table } = req.query;
@@ -692,11 +693,33 @@ const getFullSalesDataTEST = (req, res) => {
   }
 };
 
+const UserRegistration = async (req, res) => {
+  const { firstname, lastname, username, password, role } = req.body;
+  try {
+    const query = "SELECT * FROM users WHERE username = $1";
+    const result = await client.query(query, [username]);
+
+    if (result.rows.length > 0) {
+      return res.status(401).json({ message: "Username already exists" });
+    }
+
+    const values = [firstname, lastname, username, password, role];
+    const InsertQuery =
+      "INSERT INTO users(firstname, lastname, username, password, role) VALUES($1, $2, $3, $4, $5)";
+    await client.query(InsertQuery, values);
+    res.status(201).json({ message: "User registered successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 const UserLogin = async (req, res) => {
   const { username, password } = req.body;
   try {
-    const query = `select username,password from users where username = '${username}' and password = '${password}'`;
-    const result = await client.query(query);
+    const query = "SELECT * FROM users WHERE username = $1 AND password = $2";
+    const values = [username, password];
+    const result = await client.query(query, values);
+    console.log(query);
     if (result.rows.length === 1) {
       console.log(result.rows);
       res.status(200).json(result.rows[0]);
@@ -759,4 +782,5 @@ module.exports = {
   getCustomQueryDate,
   UserLogin,
   getMinMaxValues,
+  UserRegistration,
 };
