@@ -696,8 +696,7 @@ const UserRegistration = async(req, res) => {
 
     const values = [firstname, lastname, username, password, role];
       const InsertQuery = 'INSERT INTO users(firstname, lastname, username, password, role) VALUES($1, $2, $3, $4, $5)';
-      const test =  await client.query(InsertQuery, values);
-      console.log(test);
+       await client.query(InsertQuery, values);
        res.status(201).json({ message: 'User registered successfully' });    
   } catch (error) {
     res.status(500).json({ error: error.message });
