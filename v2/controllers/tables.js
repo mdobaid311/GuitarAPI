@@ -692,9 +692,68 @@ const getFullSalesDataTEST = (req, res) => {
   }
 };
 
+const UserLogin = async(req, res) => {
+  const {username, userpassword} = req.body;
+  try {
+    const query = 'SELECT * FROM users WHERE username = $1 AND userpassword = $2';
+    const values = [username, userpassword];
+    const result = await client.query(query, values);
+    console.log(query);
+    if (result.rows.length === 1) {
+      res.status(200).json({ message: 'Login successful' });
+      console.log(result.rows);
+    } else {
+      res.status(401).json({ message: 'Invalid username or password' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const getMinMaxValues = async(req, res) => {
+  const start_date = req.query.start_date;
+  const end_date = req.query.end_date;
+  const intervaltime = req.query.intervaltime;
+
+  // 2022-11-17 22:12
+  const start_date_formatted = moment(start_date, "YYYY-MM-DD HH:mm").format(
+    "YYYY-MM-DD HH:mm:ss"
+  );
+  const end_date_formatted = moment(end_date, "YYYY-MM-DD HH:mm").format(
+    "YYYY-MM-DD HH:mm:ss"
+  );
+
+  const query = `SELECT getminmaxvalues('${start_date_formatted}','${end_date_formatted}', 'Ref1', 'Ref2','Ref3', 'Ref4');
+  FETCH ALL IN "Ref1";
+  FETCH ALL IN "Ref2";
+  FETCH ALL IN "Ref3";
+  FETCH ALL IN "Ref4";
+   `;
+
+   try {
+    client.query(query, (err, result) => {
+      if (err) {
+        console.log(err);
+        res.status(500).send(err);
+        return;
+      } else {
+        const OrderBookLineResult = result[1].rows;
+        const OrderBookHeaderResult = result[2].rows;
+        const OrderBookChargesResult = result[3].rows;
+        const OrderBookTaxesResult = result[4].rows;
+        res.status(200).json({ OrderBookLineResult, OrderBookHeaderResult, OrderBookChargesResult, OrderBookTaxesResult });
+      }
+    });
+  } catch (error) {
+     res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   getTableData,
   getFullSalesData,
   getFullSalesDataTEST,
-  getCustomQueryDate
+  getCustomQueryDate,
+  UserLogin,
+  getMinMaxValues
 };
