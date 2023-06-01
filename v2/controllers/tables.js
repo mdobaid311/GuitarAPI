@@ -692,25 +692,23 @@ const getFullSalesDataTEST = (req, res) => {
   }
 };
 
-const UserLogin = async(req, res) => {
-  const {username, userpassword} = req.body;
+const UserLogin = async (req, res) => {
+  const { username, password } = req.body;
   try {
-    const query = 'SELECT * FROM users WHERE username = $1 AND userpassword = $2';
-    const values = [username, userpassword];
-    const result = await client.query(query, values);
-    console.log(query);
+    const query = `select username,password from users where username = '${username}' and password = '${password}'`;
+    const result = await client.query(query);
     if (result.rows.length === 1) {
-      res.status(200).json({ message: 'Login successful' });
       console.log(result.rows);
+      res.status(200).json(result.rows[0]);
     } else {
-      res.status(401).json({ message: 'Invalid username or password' });
+      res.status(401).json({ message: "Invalid username or password" });
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-const getMinMaxValues = async(req, res) => {
+const getMinMaxValues = async (req, res) => {
   const start_date = req.query.start_date;
   const end_date = req.query.end_date;
   const intervaltime = req.query.intervaltime;
@@ -730,7 +728,7 @@ const getMinMaxValues = async(req, res) => {
   FETCH ALL IN "Ref4";
    `;
 
-   try {
+  try {
     client.query(query, (err, result) => {
       if (err) {
         console.log(err);
@@ -741,11 +739,16 @@ const getMinMaxValues = async(req, res) => {
         const OrderBookHeaderResult = result[2].rows;
         const OrderBookChargesResult = result[3].rows;
         const OrderBookTaxesResult = result[4].rows;
-        res.status(200).json({ OrderBookLineResult, OrderBookHeaderResult, OrderBookChargesResult, OrderBookTaxesResult });
+        res.status(200).json({
+          OrderBookLineResult,
+          OrderBookHeaderResult,
+          OrderBookChargesResult,
+          OrderBookTaxesResult,
+        });
       }
     });
   } catch (error) {
-     res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -755,5 +758,5 @@ module.exports = {
   getFullSalesDataTEST,
   getCustomQueryDate,
   UserLogin,
-  getMinMaxValues
+  getMinMaxValues,
 };
