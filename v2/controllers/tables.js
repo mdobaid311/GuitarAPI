@@ -19,6 +19,17 @@ const getTableData = (req, res) => {
   });
 };
 
+const getCustomQueryDate = (req, res) => {
+  const { query } = req.body;
+  client.query(`${query} limit 100`, (err, result) => {
+    if (err) {
+      console.log(err);
+      res.status(500).send("Error fetching data");
+    } else {
+      res.send(result.rows);
+    }
+  });
+};
 const getFullSalesData = (req, res) => {
   // if (client.connection._events != null) {
   //   client.end();
@@ -188,8 +199,6 @@ const getFullSalesData = (req, res) => {
           },
           []
         );
-
-        console.log(result[3].rows);
 
         const groupedTopItemsDataByVolume = result[4].rows.reduce(
           (result, item) => {
@@ -765,6 +774,7 @@ module.exports = {
   getTableData,
   getFullSalesData,
   getFullSalesDataTEST,
+  getCustomQueryDate,
   UserLogin,
   getMinMaxValues,
   UserRegistration
