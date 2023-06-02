@@ -4,7 +4,7 @@ const {
   formatDate,
   getFulfillmentDescription,
 } = require("../utils/fulfillment_type_details");
-const { tryEach } = require("async");
+const { mergeData } = require("../utils/state_mapping");
 
 const getTableData = (req, res) => {
   const { table } = req.query;
@@ -695,6 +695,8 @@ const getFullSalesDataTEST = (req, res) => {
 
 const UserRegistration = async (req, res) => {
   const { firstname, lastname, username, password, role } = req.body;
+  console.log(req.body);
+
   try {
     const query = "SELECT * FROM users WHERE username = $1";
     const result = await client.query(query, [username]);
@@ -703,9 +705,16 @@ const UserRegistration = async (req, res) => {
       return res.status(401).json({ message: "Username already exists" });
     }
 
-    const values = [firstname, lastname, username, password, role];
+    const values = [
+      firstname,
+      lastname,
+      username,
+      password,
+      role,
+      Math.floor(Math.random() * 100),
+    ];
     const InsertQuery =
-      "INSERT INTO users(firstname, lastname, username, password, role) VALUES($1, $2, $3, $4, $5)";
+      "INSERT INTO users(firstname, lastname, username, password, role,id) VALUES($1, $2, $3, $4, $5,$6)";
     await client.query(InsertQuery, values);
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
@@ -775,6 +784,43 @@ const getMinMaxValues = async (req, res) => {
   }
 };
 
+const getMapData = async (req, res) => {
+  const start_date = req.query.start_date;
+  const end_date = req.query.end_date;
+
+  // 2022-11-17 22:12
+  const start_date_formatted = moment(start_date, "YYYY-MM-DD HH:mm").format(
+    "YYYY-MM-DD HH:mm:ss"
+  );
+
+  const end_date_formatted = moment(end_date, "YYYY-MM-DD HH:mm").format(
+    "YYYY-MM-DD HH:mm:ss"
+  );
+
+  const query = `select ship_to_state,sum(original_order_total_amount) from order_book_line where order_date_parsed>='${start_date_formatted}' and order_date_parsed <='${end_date_formatted}'  group by ship_to_state  `;
+
+  try {
+    client.query(query, (err, result) => {
+      const output = result.rows.map((item) => {
+        return [("us-" + item.ship_to_state.trim()).toLowerCase(), +item.sum];
+      });
+
+      const abbreviatedData = mergeData(output).map((item) => {
+        return [
+          item[0],
+          item[1],
+          Intl.NumberFormat("en-US", {
+            notation: "compact",
+            compactDisplay: "short",
+          }).format(item[1]),
+        ];
+      });
+
+      res.status(200).json(abbreviatedData);
+    });
+  } catch (error) {}
+};
+
 module.exports = {
   getTableData,
   getFullSalesData,
@@ -783,4 +829,5 @@ module.exports = {
   UserLogin,
   getMinMaxValues,
   UserRegistration,
+  getMapData,
 };
