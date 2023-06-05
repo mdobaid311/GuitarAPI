@@ -9,6 +9,7 @@ const {
   UserRegistration,
   getCustomQueryDate,
   getMapData,
+  getTimeSeriesData
 } = require("../controllers/tables");
 
 const router = express.Router();
@@ -21,5 +22,6 @@ router.post("/login", UserLogin);
 router.get("/getMinMaxValues", getMinMaxValues);
 router.post("/register", UserRegistration);
 router.get("/map", getMapData);
+router.get("/timeSeriesData", getTimeSeriesData);
 
 module.exports = router;
