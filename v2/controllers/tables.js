@@ -728,9 +728,7 @@ const UserLogin = async (req, res) => {
     const query = "SELECT * FROM users WHERE username = $1 AND password = $2";
     const values = [username, password];
     const result = await client.query(query, values);
-    console.log(query);
     if (result.rows.length === 1) {
-      console.log(result.rows);
       res.status(200).json(result.rows[0]);
     } else {
       res.status(401).json({ message: "Invalid username or password" });
@@ -829,6 +827,23 @@ const getAllUser = async (req, res) => {
     });
   } catch (error) {}
 };
+const getTimeSeriesData = async(req, res) => {
+   const StartDate = req.query.start_date;
+   const EndDate = req.query.end_date;
+  try {
+    const query = `SELECT * FROM order_status_time_series WHERE actual_order_date >= '${StartDate}' AND actual_order_date <='${EndDate}' ORDER BY status,       actual_order_date;`    
+    const result = await client.query(query);
+    if (result.rows.length < 1) {
+    return  res.status(401).json({ success : false, message : "No data found"});
+    } else {
+    return  res.status(200).json({ success : true, timeSeriesData :result.rows });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+
+};
+
 module.exports = {
   getTableData,
   getFullSalesData,
@@ -838,4 +853,6 @@ module.exports = {
   getMinMaxValues,
   UserRegistration,
   getMapData,getAllUser
+ ,
+  getTimeSeriesData
 };
