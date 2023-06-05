@@ -821,6 +821,14 @@ const getMapData = async (req, res) => {
   } catch (error) {}
 };
 
+const getAllUser = async (req, res) => {
+  try {
+    const query = `SELECT * FROM users`;
+    client.query(query, (err, result) => {
+      res.status(200).json(result.rows);
+    });
+  } catch (error) {}
+};
 module.exports = {
   getTableData,
   getFullSalesData,
@@ -829,5 +837,5 @@ module.exports = {
   UserLogin,
   getMinMaxValues,
   UserRegistration,
-  getMapData,
+  getMapData,getAllUser
 };
