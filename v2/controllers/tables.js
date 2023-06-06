@@ -1,6 +1,6 @@
 const client = require("../config/postgre_client");
 const moment = require("moment");
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 
 const {
   formatDate,
@@ -730,14 +730,13 @@ const UserLogin = async (req, res) => {
   try {
     const query = "SELECT * FROM users WHERE username = $1";
     const values = [username];
-    const result = await client.query(query, values);    
+    const result = await client.query(query, values);
     if (result.rows.length === 1) {
       const isMatch = await bcrypt.compare(password, result.rows[0].password);
-       if(isMatch) {
-        const { password, ...rest} = result.rows[0];
-         res.status(200).json({...rest, password : originalPass});
-       }
-       else {
+      if (isMatch) {
+        const { password, ...rest } = result.rows[0];
+        res.status(200).json({ ...rest, password: originalPass });
+      } else {
         res.status(401).json({ message: "Invalid username or password" });
       }
     } else {
@@ -809,22 +808,24 @@ const getMapData = async (req, res) => {
 
   try {
     client.query(query, (err, result) => {
-      const output = result.rows.map((item) => {
-        return [("us-" + item.ship_to_state.trim()).toLowerCase(), +item.sum];
-      });
+      const totalSum = result.rows.reduce((acc, item) => {
+        return acc + +item.sum;
+      }, 0);
 
-      const abbreviatedData = mergeData(output).map((item) => {
+      const output = result.rows.map((item) => {
+        // third value should be the percentage of the total with only two decimal places
         return [
-          item[0],
-          item[1],
-          Intl.NumberFormat("en-US", {
-            notation: "compact",
-            compactDisplay: "short",
-          }).format(item[1]),
+          ("us-" + item.ship_to_state.trim()).toLowerCase(),
+          +item.sum,
+          Math.round((+item.sum / totalSum) * 10000) / 100,
         ];
       });
 
-      res.status(200).json(abbreviatedData);
+      const sortedArray = output.sort((a, b) => {
+        return b[1] - a[1];
+      });
+
+      res.status(200).json(sortedArray.slice(0, 10));
     });
   } catch (error) {}
 };
@@ -837,6 +838,7 @@ const getAllUser = async (req, res) => {
     });
   } catch (error) {}
 };
+
 const getTimeSeriesData = async (req, res) => {
   const StartDate = req.query.start_date;
   const EndDate = req.query.end_date;
@@ -855,6 +857,48 @@ const getTimeSeriesData = async (req, res) => {
   }
 };
 
+const getCityData = async (req, res) => {
+  const start_date = req.query.start_date;
+  const end_date = req.query.end_date;
+
+  // 2022-11-17 22:12
+  const start_date_formatted = moment(start_date, "YYYY-MM-DD HH:mm").format(
+    "YYYY-MM-DD HH:mm:ss"
+  );
+
+  const end_date_formatted = moment(end_date, "YYYY-MM-DD HH:mm").format(
+    "YYYY-MM-DD HH:mm:ss"
+  );
+
+  const city = req.query.city.split("-")[1].toUpperCase();
+
+  console.log();
+
+  const query = `select TRIM(ship_to_city) as city,sum(original_order_total_amount) as original_order_total_amount  from order_book_line where  TRIM(ship_to_state) ='${city}' group by ship_to_city ;`;
+  console.log(query);
+  try {
+    client.query(query, (err, result) => {
+      // const output = result.rows.map((item) => {
+      //   return [("us-" + item.ship_to_state.trim()).toLowerCase(), +item.sum];
+      // });
+
+      // const abbreviatedData = mergeData(output).map((item) => {
+      //   return [
+      //     item[0],
+      //     item[1],
+      //     Intl.NumberFormat("en-US", {
+      //       notation: "compact",
+      //       compactDisplay: "short",
+      //     }).format(item[1]),
+      //   ];
+      // });
+
+      res.status(200).json(result.rows);
+    });
+  } catch (error) {
+    console.log(error);
+  }
+};
 module.exports = {
   getTableData,
   getFullSalesData,
@@ -866,4 +910,5 @@ module.exports = {
   getMapData,
   getAllUser,
   getTimeSeriesData,
+  getCityData,
 };

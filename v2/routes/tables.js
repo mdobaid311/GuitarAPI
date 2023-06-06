@@ -10,7 +10,8 @@ const {
   getCustomQueryDate,
   getMapData,
   getAllUser,
-  getTimeSeriesData
+  getTimeSeriesData,
+  getCityData
 } = require("../controllers/tables");
 
 const router = express.Router();
@@ -25,5 +26,6 @@ router.post("/register", UserRegistration);
 router.get("/map", getMapData);
 router.get("/users",getAllUser)
 router.get("/timeSeriesData", getTimeSeriesData);
+router.get("/getCityData", getCityData);
 
 module.exports = router;
