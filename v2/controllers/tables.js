@@ -827,21 +827,22 @@ const getAllUser = async (req, res) => {
     });
   } catch (error) {}
 };
-const getTimeSeriesData = async(req, res) => {
-   const StartDate = req.query.start_date;
-   const EndDate = req.query.end_date;
+const getTimeSeriesData = async (req, res) => {
+  const StartDate = req.query.start_date;
+  const EndDate = req.query.end_date;
   try {
-    const query = `SELECT * FROM order_status_time_series WHERE actual_order_date >= '${StartDate}' AND actual_order_date <='${EndDate}' ORDER BY status,       actual_order_date;`    
+    const query = `SELECT * FROM order_status_time_series WHERE actual_order_date >= '${StartDate}' AND actual_order_date <='${EndDate}' ORDER BY status,       actual_order_date;`;
     const result = await client.query(query);
     if (result.rows.length < 1) {
-    return  res.status(401).json({ success : false, message : "No data found"});
+      return res.status(401).json({ success: false, message: "No data found" });
     } else {
-    return  res.status(200).json({ success : true, timeSeriesData :result.rows });
+      return res
+        .status(200)
+        .json({ success: true, timeSeriesData: result.rows });
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-
 };
 
 module.exports = {
@@ -852,7 +853,7 @@ module.exports = {
   UserLogin,
   getMinMaxValues,
   UserRegistration,
-  getMapData,getAllUser
- ,
-  getTimeSeriesData
+  getMapData,
+  getAllUser,
+  getTimeSeriesData,
 };
