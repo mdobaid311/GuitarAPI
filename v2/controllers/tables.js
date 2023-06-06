@@ -1,5 +1,7 @@
 const client = require("../config/postgre_client");
 const moment = require("moment");
+const bcrypt = require('bcrypt');
+
 const {
   formatDate,
   getFulfillmentDescription,
@@ -695,8 +697,6 @@ const getFullSalesDataTEST = (req, res) => {
 
 const UserRegistration = async (req, res) => {
   const { firstname, lastname, username, password, role } = req.body;
-  console.log(req.body);
-
   try {
     const query = "SELECT * FROM users WHERE username = $1";
     const result = await client.query(query, [username]);
@@ -704,12 +704,14 @@ const UserRegistration = async (req, res) => {
     if (result.rows.length > 0) {
       return res.status(401).json({ message: "Username already exists" });
     }
+    const saltRounds = 10;
+    let secPass = await bcrypt.hash(password, saltRounds);
 
     const values = [
       firstname,
       lastname,
       username,
-      password,
+      secPass,
       role,
       Math.floor(Math.random() * 100),
     ];
@@ -724,12 +726,20 @@ const UserRegistration = async (req, res) => {
 
 const UserLogin = async (req, res) => {
   const { username, password } = req.body;
+  const originalPass = password;
   try {
-    const query = "SELECT * FROM users WHERE username = $1 AND password = $2";
-    const values = [username, password];
-    const result = await client.query(query, values);
+    const query = "SELECT * FROM users WHERE username = $1";
+    const values = [username];
+    const result = await client.query(query, values);    
     if (result.rows.length === 1) {
-      res.status(200).json(result.rows[0]);
+      const isMatch = await bcrypt.compare(password, result.rows[0].password);
+       if(isMatch) {
+        const { password, ...rest} = result.rows[0];
+         res.status(200).json({...rest, password : originalPass});
+       }
+       else {
+        res.status(401).json({ message: "Invalid username or password" });
+      }
     } else {
       res.status(401).json({ message: "Invalid username or password" });
     }
