@@ -841,6 +841,7 @@ const getAllUser = async (req, res) => {
 
 const getTimeSeriesData = async (req, res) => {
   const date = req.query.date;
+  console.log(date);
 
   try {
     const query = `SELECT * FROM order_status_time_series WHERE actual_order_date = '${date}' ORDER BY status,actual_status_date;`;
@@ -867,6 +868,11 @@ const getTimeSeriesData = async (req, res) => {
       const timeSeriesOutput = statusNames.map((statusName) => {
         return {
           status_name: statusName,
+          sum: data.reduce((acc, item) => {
+            return item.status_name === statusName
+              ? acc + +item.original_ordered_qty
+              : acc;
+          }, 0),
           date_values: dateRange.map((date) => {
             const matchingData = data.find(
               (item) =>
@@ -887,16 +893,18 @@ const getTimeSeriesData = async (req, res) => {
           dateObj.setDate(dateObj.getDate() + 1);
           return dateObj.toISOString().split("T")[0];
         }),
+
         timeSeries: timeSeriesOutput,
       };
 
-      response.timeSeries.forEach((item) => {
-        console.log(item.date_values.length);
-      });
+      // response.timeSeries.forEach((item) => {
+      //   console.log(item.date_values.length);
+      // });
 
       return res.status(200).json(response);
     }
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: error.message });
   }
 };
