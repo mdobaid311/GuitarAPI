@@ -840,17 +840,61 @@ const getAllUser = async (req, res) => {
 };
 
 const getTimeSeriesData = async (req, res) => {
-  const StartDate = req.query.start_date;
-  const EndDate = req.query.end_date;
+  const date = req.query.date;
+
   try {
-    const query = `SELECT * FROM order_status_time_series WHERE actual_order_date >= '${StartDate}' AND actual_order_date <='${EndDate}' ORDER BY status,       actual_order_date;`;
+    const query = `SELECT * FROM order_status_time_series WHERE actual_order_date = '${date}' ORDER BY status,actual_status_date;`;
+    console.log(query);
     const result = await client.query(query);
     if (result.rows.length < 1) {
       return res.status(401).json({ success: false, message: "No data found" });
     } else {
-      return res
-        .status(200)
-        .json({ success: true, timeSeriesData: result.rows });
+      const data = result.rows;
+      const statusNames = [...new Set(data.map((item) => item.status_name))];
+
+      // Generate date range based on the data
+      const startDate = new Date(data[0].actual_status_date);
+      const endDate = new Date(data[data.length - 1].actual_status_date);
+      const dateRange = [];
+      let currentDate = new Date(startDate);
+
+      while (currentDate <= endDate) {
+        dateRange.push(currentDate.toISOString().split("T")[0]);
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
+
+      // Create the time series output
+      const timeSeriesOutput = statusNames.map((statusName) => {
+        return {
+          status_name: statusName,
+          date_values: dateRange.map((date) => {
+            const matchingData = data.find(
+              (item) =>
+                item.status_name === statusName &&
+                new Date(item.actual_status_date)
+                  .toISOString()
+                  .split("T")[0] === date
+            );
+
+            return matchingData ? +matchingData.original_ordered_qty : 0;
+          }),
+        };
+      });
+
+      const response = {
+        dates: dateRange.map((date) => {
+          const dateObj = new Date(date);
+          dateObj.setDate(dateObj.getDate() + 1);
+          return dateObj.toISOString().split("T")[0];
+        }),
+        timeSeries: timeSeriesOutput,
+      };
+
+      response.timeSeries.forEach((item) => {
+        console.log(item.date_values.length);
+      });
+
+      return res.status(200).json(response);
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -878,21 +922,6 @@ const getCityData = async (req, res) => {
   console.log(query);
   try {
     client.query(query, (err, result) => {
-      // const output = result.rows.map((item) => {
-      //   return [("us-" + item.ship_to_state.trim()).toLowerCase(), +item.sum];
-      // });
-
-      // const abbreviatedData = mergeData(output).map((item) => {
-      //   return [
-      //     item[0],
-      //     item[1],
-      //     Intl.NumberFormat("en-US", {
-      //       notation: "compact",
-      //       compactDisplay: "short",
-      //     }).format(item[1]),
-      //   ];
-      // });
-
       res.status(200).json(result.rows);
     });
   } catch (error) {
