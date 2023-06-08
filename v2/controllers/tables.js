@@ -844,7 +844,6 @@ const getTimeSeriesData = async (req, res) => {
 
   try {
     const query = `SELECT * FROM order_status_time_series WHERE actual_order_date = '${date}' ORDER BY status,actual_status_date;`;
-    console.log(query);
     const result = await client.query(query);
     if (result.rows.length < 1) {
       return res.status(401).json({ success: false, message: "No data found" });
@@ -928,6 +927,91 @@ const getCityData = async (req, res) => {
     console.log(error);
   }
 };
+
+const getDataForTimeSeies = async(req, res) => {
+    const orderDate = req.query.date;
+    const query = `SELECT getTimeSeriesData('${orderDate}','Ref1', 'Ref2','Ref3', 'Ref4','Ref5','Ref6');
+    FETCH ALL IN "Ref1";
+    FETCH ALL IN "Ref2";
+    FETCH ALL IN "Ref3";
+    FETCH ALL IN "Ref4";
+    FETCH ALL IN "Ref5";
+    FETCH ALL IN "Ref6";
+   `;
+   const timeLineDates = [];
+   const originalDate = new Date(orderDate);
+   const firstDate1 = new Date(originalDate);
+   const  firstDate2 = new Date(originalDate);
+   const firstDate3 = new Date(originalDate);
+   const firstDate4 = new Date(originalDate);
+   const firstDate5 = new Date(originalDate);
+   firstDate1.setDate(originalDate.getDate() + 4);   
+   firstDate2.setDate(originalDate.getDate() + 14);   
+   firstDate3.setDate(originalDate.getDate() + 19);   
+   firstDate4.setDate(originalDate.getDate() + 29);    
+  timeLineDates.push(firstDate1.toISOString().split('T')[0],
+  firstDate2.toISOString().split('T')[0],
+  firstDate3.toISOString().split('T')[0],
+  firstDate4.toISOString().split('T')[0],
+  );   
+
+    try {     
+   client.query(query, (err, result) => {
+    if (err) {
+      return res.status(500).send(err);      
+    } else {
+      const firstTimeLineData = result[1].rows;
+      const secondTimeLineData = result[2].rows;
+      const thirdTimeLineData = result[3].rows;
+      const fourthTimeLineData = result[4].rows;
+      const fifthTimeLineData = result[5].rows;
+      const sixthTimeLineData = result[6].rows;
+
+      const mergedData = firstTimeLineData.map((first) => {
+        const status_name = first.status_name;
+        let lastDate =0;
+        const QtySum = [];
+        const lineTotalSum = [];
+
+        secondTimeLineData.forEach((second) => {
+          if (first.status_name === second.status_name) {
+            thirdTimeLineData.forEach((third) => {
+              if (first.status_name === third.status_name) {
+                fourthTimeLineData.forEach((fourth) => {
+                  if (first.status_name === fourth.status_name) {
+                    fifthTimeLineData.forEach((fifth) => {
+                      if (first.status_name === fifth.status_name) {
+                        const sixth = sixthTimeLineData.find(
+                          (item) => item.status_name === first.status_name
+                        );
+                        if (sixth) {
+                        QtySum.push(parseInt(first.qtysum), parseInt(second.qtysum), parseInt(third.qtysum), parseInt(fourth.qtysum),parseInt(fifth.qtysum));
+
+                        lineTotalSum.push(parseInt(first.linetotalsum),parseInt(second.linetotalsum),parseInt(third.linetotalsum),parseInt(fourth.linetotalsum),
+                        parseInt(fifth.linetotalsum));
+                        lastDate = sixth.maxdate.toISOString().split('T')[0];                      
+                        }
+                      }
+                    });
+                  }
+                });
+              }
+            });
+          }
+        });
+
+        return { status_name,lastDate, QtySum, lineTotalSum };
+      });
+
+      res.status(200).json({timeLineDates, mergedData });
+    }
+  });      
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+};
+
+
 module.exports = {
   getTableData,
   getFullSalesData,
@@ -940,4 +1024,5 @@ module.exports = {
   getAllUser,
   getTimeSeriesData,
   getCityData,
+  getDataForTimeSeies
 };

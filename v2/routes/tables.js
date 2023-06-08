@@ -11,7 +11,8 @@ const {
   getMapData,
   getAllUser,
   getTimeSeriesData,
-  getCityData
+  getCityData,
+  getDataForTimeSeies
 } = require("../controllers/tables");
 
 const router = express.Router();
@@ -27,5 +28,6 @@ router.get("/map", getMapData);
 router.get("/users",getAllUser)
 router.get("/timeSeriesData", getTimeSeriesData);
 router.get("/getCityData", getCityData);
+router.get("/getDataForTimeSeies", getDataForTimeSeies);
 
 module.exports = router;
