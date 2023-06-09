@@ -28,6 +28,6 @@ router.get("/map", getMapData);
 router.get("/users",getAllUser)
 router.get("/timeSeriesData", getTimeSeriesData);
 router.get("/getCityData", getCityData);
-router.get("/getDataForTimeSeies", getDataForTimeSeies);
+router.get("/getDataForTimeSeries", getDataForTimeSeies);
 
 module.exports = router;
