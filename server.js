@@ -19,6 +19,7 @@ const orgChartRouter = require("./v1/routes/org-chart");
 const v2ActiveLineStatusDetailsRouter = require("./v2/routes/active_line_status_details");
 const v2TablesRouter = require("./v2/routes/tables");
 const v2SalesRouter = require("./v2/routes/sales");
+const v2ReturnsRouter = require("./v2/routes/returns");
 
 app.get("/", (req, res) => {
   res.send("Guitar API");
@@ -32,6 +33,7 @@ app.use("/org", orgChartRouter);
 
 app.use("/v2/alsd", v2ActiveLineStatusDetailsRouter);
 app.use("/v2/tables", v2TablesRouter);
+app.use("/v2/returns", v2ReturnsRouter);
 app.use("/v2/sales", v2SalesRouter);
 
 const port = process.env.PORT || 3000;
