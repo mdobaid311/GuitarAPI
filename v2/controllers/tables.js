@@ -1,6 +1,7 @@
 const client = require("../config/postgre_client");
 const moment = require("moment");
 const bcrypt = require("bcrypt");
+const nodemailer = require("nodemailer");
 
 const {
   formatDate,
@@ -702,6 +703,7 @@ const UserRegistration = async (req, res) => {
     const result = await client.query(query, [username]);
 
     if (result.rows.length > 0) {
+
       return res.status(401).json({ message: "Username already exists" });
     }
     const saltRounds = 10;
@@ -718,7 +720,42 @@ const UserRegistration = async (req, res) => {
     const InsertQuery =
       "INSERT INTO users(firstname, lastname, username, password, role,id) VALUES($1, $2, $3, $4, $5,$6)";
     await client.query(InsertQuery, values);
+    sendVerifyMail(firstname,lastname,username, password);
     res.status(201).json({ message: "User registered successfully" });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const sendVerifyMail = async(firstname,lastname,username, password) => {
+  try {
+    const transporter  = nodemailer.createTransport({
+      host : "smtp.gmail.com",
+      port:587,
+      secure : false,
+      requireTLS:true,
+      auth : {
+        user : 'guitarcenter.xit@gmail.com',
+        pass :'blnsziorfgrueolw'
+      }
+    });
+    const mailOptions = {
+      from : 'guitarcenter.xit@gmail.com',
+      to: username,
+      subject : 'Guitar Center Credentials',
+      html :'<p>Hi '+firstname+' ' +lastname+',<br><br>Welcome to guitar center, please find below credentials.<br><br><a href="http://3.111.38.149/">http://3.111.38.149/login</a><br><br>Username : '+username+' <br> password : '+password+' <br><br><br> Thanks and regards, <br>Guitar Center Admin</p>'
+    }
+
+    transporter.sendMail(mailOptions, function(err, info){
+      if(err){
+        console.log(err);
+      }
+      else{
+        console.log("Email has been sent :- ", info.response);
+      }
+    });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
