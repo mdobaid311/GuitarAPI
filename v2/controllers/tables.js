@@ -84,7 +84,7 @@ const getFullSalesData = (req, res) => {
 
           acc[enterpriseKey].series.push({
             enterprise_key: order.enterprise_key,
-            datetime:  formatDate(order.datetime, intervaltime, i),
+            datetime: moment(order.datetime).format("MMM-DD HH:mm"),
             // datetime: formatDate(order.datetime, intervaltime, i),
             original_order_total_amount: +order.original_order_total_amount,
             line_ordered_qty: +order.line_ordered_qty,
