@@ -772,7 +772,7 @@ const UserLogin = async (req, res) => {
       const isMatch = await bcrypt.compare(password, result.rows[0].password);
       if (isMatch) {
         const { password, ...rest } = result.rows[0];
-        res.status(200).json({ ...rest, password: originalPass });
+        res.status(200).json({ ...rest});
       } else {
         res.status(401).json({ message: "Invalid username or password" });
       }
@@ -965,8 +965,30 @@ const getCityData = async (req, res) => {
 };
 
 const getDataForTimeSeies = async (req, res) => {
-  const orderDate = req.query.date;
-  const query = `SELECT getTimeSeriesData('${orderDate}','Ref1', 'Ref2','Ref3', 'Ref4','Ref5','Ref6');
+  const  orderDate  = req.query.date;
+  const userid = [Number(req.query.userid)];
+  
+  try {
+  const timeLineDates = [];
+  const mileStoneQuery = `SELECT * FROM milestoneinfo WHERE userid=$1`;
+  const mileStoneResult = await client.query(mileStoneQuery, userid);
+  const originalDate = new Date(orderDate);
+  let msOne = new Date(originalDate);
+  let msTwo = new Date(originalDate);
+  let msThree = new Date(originalDate);
+  let msFour = new Date(originalDate);
+  let msFive = new Date(originalDate);
+  msOne.setDate(originalDate.getDate() + (Number(mileStoneResult.rows[0].msone)-1));
+  msTwo.setDate(originalDate.getDate() + (Number(mileStoneResult.rows[0].mstwo)-1));
+  msThree.setDate(originalDate.getDate() + (Number(mileStoneResult.rows[0].msthree)-1));
+  msFour.setDate(originalDate.getDate() + (Number(mileStoneResult.rows[0].msfour)-1));
+  msFive.setDate(originalDate.getDate() + (Number(mileStoneResult.rows[0].msfive)-1));
+
+  msOne = msOne.toISOString().split("T")[0];
+  msTwo = msTwo.toISOString().split("T")[0];
+  msThree = msThree.toISOString().split("T")[0];
+  msFour = msFour.toISOString().split("T")[0];
+  const query = `SELECT gettimeseriesdataupdated('${orderDate}','${msOne}','${msTwo}','${msThree}','${msFour}','Ref1', 'Ref2','Ref3', 'Ref4','Ref5','Ref6');
     FETCH ALL IN "Ref1";
     FETCH ALL IN "Ref2";
     FETCH ALL IN "Ref3";
@@ -974,25 +996,13 @@ const getDataForTimeSeies = async (req, res) => {
     FETCH ALL IN "Ref5";
     FETCH ALL IN "Ref6";
    `;
-  const timeLineDates = [];
-  const originalDate = new Date(orderDate);
-  const firstDate1 = new Date(originalDate);
-  const firstDate2 = new Date(originalDate);
-  const firstDate3 = new Date(originalDate);
-  const firstDate4 = new Date(originalDate);
-  const firstDate5 = new Date(originalDate);
-  firstDate1.setDate(originalDate.getDate() + 4);
-  firstDate2.setDate(originalDate.getDate() + 14);
-  firstDate3.setDate(originalDate.getDate() + 19);
-  firstDate4.setDate(originalDate.getDate() + 29);
   timeLineDates.push(
-    firstDate1.toISOString().split("T")[0],
-    firstDate2.toISOString().split("T")[0],
-    firstDate3.toISOString().split("T")[0],
-    firstDate4.toISOString().split("T")[0]
+    msOne,
+    msTwo,
+    msThree,
+    msFour
   );
 
-  try {
     client.query(query, (err, result) => {
       if (err) {
         return res.status(500).send(err);

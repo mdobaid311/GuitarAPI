@@ -44,12 +44,16 @@ const getReturnsData = async(req, res) =>{
 };
 
 const mileStoneInfo = async(req, res) =>{
-    const {username, msone, mstwo, msthree, msfour, msfive, mssix } = req.body;
+    const {userid, msone, mstwo, msthree, msfour, msfive, mssix } = req.body;
     try {
-        const query = `INSERT INTO milestoneinfo(username, msone, mstwo,msthree, msfour, msfive, mssix) VALUES($1, $2, $3,$4,$5,$6,$7)`;
-        const values = [username, msone, mstwo, msthree, msfour, msfive, mssix ];
+        const checkUserQuery = `SELECT * FROM milestoneinfo WHERE userid =$1`;
+        const checkUserResult = await client.query(checkUserQuery, [Number(userid)]);
+        const updateQuery = `UPDATE milestoneinfo SET msone = $2, mstwo = $3, msthree = $4, msfour = $5, msfive = $6, mssix = $7 WHERE userid =$1`;        
+        const insertQuery = `INSERT INTO milestoneinfo(userid, msone, mstwo,msthree, msfour, msfive, mssix) VALUES($1, $2, $3,$4,$5,$6,$7)`;
+        const query = (checkUserResult.rows.length > 0) ?(updateQuery) :(insertQuery);
+        const values = [userid, msone, mstwo, msthree, msfour, msfive, mssix ];
         const result = await client.query(query, values);
-        res.status(201).json({ message : "Milestone info created successfully"});
+        res.status(201).json({ message : (query === insertQuery) ?("Milestone info created successfully") : ("Milestone info updated successfully")});
     } catch (error) {
         res.status(500).json({error : error.message});
     }
@@ -58,11 +62,11 @@ const mileStoneInfo = async(req, res) =>{
 const getMileStoneInfo = async(req, res) => {
 
     try {
-        const query = `SELECT * FROM milestoneinfo WHERE username =$1`;
-        const username = [req.query.username];
-        const result = await client.query(query, username);
+        const query = `SELECT * FROM milestoneinfo WHERE userid =$1`;
+        const userid = [req.query.userid];
+        const result = await client.query(query, userid);
         if(result.rows.length <1) {
-            return res.status(404).json({message : `no data found for username : ${username}`});
+            return res.status(404).json({message : `no data found for username : ${userid}`});
         }
         res.status(201).json({result : result.rows});
     } catch (error) {
