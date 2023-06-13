@@ -8,6 +8,7 @@ const {
   getFulfillmentDescription,
 } = require("../utils/fulfillment_type_details");
 const { mergeData } = require("../utils/state_mapping");
+const { getCategoryName } = require("../utils/category_map.js");
 
 const getTableData = (req, res) => {
   const { table } = req.query;
@@ -62,7 +63,7 @@ const getFullSalesData = (req, res) => {
   FETCH ALL IN "Ref8";
    `;
 
-  console.log(query);
+ 
   try {
     client.query(query, (err, result) => {
       if (err) {
@@ -83,7 +84,8 @@ const getFullSalesData = (req, res) => {
 
           acc[enterpriseKey].series.push({
             enterprise_key: order.enterprise_key,
-            datetime: formatDate(order.datetime, intervaltime, i),
+            datetime: moment(order.datetime).format("MMM-DD HH:mm"),
+            // datetime: formatDate(order.datetime, intervaltime, i),
             original_order_total_amount: +order.original_order_total_amount,
             line_ordered_qty: +order.line_ordered_qty,
           });
@@ -202,6 +204,13 @@ const getFullSalesData = (req, res) => {
           },
           []
         );
+
+        result[4].rows.forEach((item) => {
+          item.web_category = getCategoryName(item.web_category);
+        });
+        result[8].rows.forEach((item) => {
+          item.web_category = getCategoryName(item.web_category);
+        });
 
         const groupedTopItemsDataByVolume = result[4].rows.reduce(
           (result, item) => {
@@ -843,6 +852,8 @@ const getMapData = async (req, res) => {
 
   const query = `select ship_to_state,sum(original_order_total_amount) from order_book_line where order_date_parsed>='${start_date_formatted}' and order_date_parsed <='${end_date_formatted}'  group by ship_to_state  `;
 
+  console.log(query)
+
   try {
     client.query(query, (err, result) => {
       const totalSum = result.rows.reduce((acc, item) => {
@@ -861,8 +872,9 @@ const getMapData = async (req, res) => {
       const sortedArray = output.sort((a, b) => {
         return b[1] - a[1];
       });
+      console.log(sortedArray)
 
-      res.status(200).json(sortedArray.slice(0, 10));
+      res.status(200).json(sortedArray);
     });
   } catch (error) {}
 };
