@@ -43,6 +43,35 @@ const getReturnsData = async(req, res) =>{
    }
 };
 
+const mileStoneInfo = async(req, res) =>{
+    const {username, msone, mstwo, msthree, msfour, msfive, mssix } = req.body;
+    try {
+        const query = `INSERT INTO milestoneinfo(username, msone, mstwo,msthree, msfour, msfive, mssix) VALUES($1, $2, $3,$4,$5,$6,$7)`;
+        const values = [username, msone, mstwo, msthree, msfour, msfive, mssix ];
+        const result = await client.query(query, values);
+        res.status(201).json({ message : "Milestone info created successfully"});
+    } catch (error) {
+        res.status(500).json({error : error.message});
+    }
+};
+
+const getMileStoneInfo = async(req, res) => {
+
+    try {
+        const query = `SELECT * FROM milestoneinfo WHERE username =$1`;
+        const username = [req.query.username];
+        const result = await client.query(query, username);
+        if(result.rows.length <1) {
+            return res.status(404).json({message : `no data found for username : ${username}`});
+        }
+        res.status(201).json({result : result.rows});
+    } catch (error) {
+        res.status(500).json({error : error.message});
+    }
+};
+
 module.exports = {
-    getReturnsData
+    getReturnsData,
+    mileStoneInfo,
+    getMileStoneInfo
   };
