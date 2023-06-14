@@ -6,13 +6,15 @@
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "fs": "^0.0.1-security",
     "helmet": "^6.0.1",
     "moment": "^2.29.4",
     "morgan": "^1.10.0",
     "mysql": "^2.18.1",
     "nodemailer": "^6.9.3",
     "nodemon": "^2.0.21",
-    "pg": "^8.11.0"
+    "pg": "^8.11.0",
+    "xlsx": "^0.18.5"
   },
   "name": "scylladb-api",
   "version": "1.0.0",

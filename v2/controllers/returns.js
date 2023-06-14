@@ -1,9 +1,13 @@
 const client = require("../config/postgre_client");
+const fs = require('fs');
+const xlsx = require('xlsx');
+const nodemailer = require("nodemailer");
 
 const getReturnsData = async(req, res) =>{
-    const returnOrderDate = req.query.date;
+    const StartDate = req.query.StartDate;
+    const EndDate = req.query.EndDate;
     
-    const query = `SELECT getReturnsData('${returnOrderDate}','Ref1', 'Ref2','Ref3', 'Ref4','Ref5','Ref6','Ref7', 'Ref8','Ref9', 'Ref10','Ref11');
+    const query = `SELECT getReturnsData('${StartDate}','${EndDate}', 'Ref1', 'Ref2','Ref3', 'Ref4','Ref5','Ref6','Ref7', 'Ref8','Ref9', 'Ref10','Ref11');
     FETCH ALL IN "Ref1";FETCH ALL IN "Ref2";FETCH ALL IN "Ref3";FETCH ALL IN "Ref4";FETCH ALL IN "Ref5";FETCH ALL IN "Ref6";FETCH ALL IN "Ref7";FETCH ALL IN "Ref8";FETCH ALL IN "Ref9";FETCH ALL IN "Ref10";FETCH ALL IN "Ref11";`;
 
    try {
@@ -147,8 +151,65 @@ const getMileStoneInfo = async(req, res) => {
     }
 };
 
+// const getExportedData = async(req, res) => {
+//     try {
+//         const query = `SELECT * FROM order_book_line limit 10`;
+//         const result = await client.query(query);
+//         const data = result.rows;
+//         const workbook = xlsx.utils.book_new();
+//         const worksheet = xlsx.utils.json_to_sheet(data);
+//         xlsx.utils.book_append_sheet(workbook, worksheet, 'Sheet 1');
+//         const excelFilePath = 'path/to/excel.xlsx';
+//         xlsx.writeFile(workbook, excelFilePath);
+//         excelExportData(excelFilePath, username)
+//     } catch (error) {
+//         res.status(500).json({error : error.message});
+//     }
+// };
+
+// const excelExportData = async(excelFilePath,username) => {
+//     try {
+//       const transporter  = nodemailer.createTransport({
+//         host : "smtp.gmail.com",
+//         port:587,
+//         secure : false,
+//         requireTLS:true,
+//         auth : {
+//           user : 'guitarcenter.xit@gmail.com',
+//           pass :'blnsziorfgrueolw'
+//         }
+//       });
+//       const mailOptions = {
+//         from : 'guitarcenter.xit@gmail.com',
+//         to: 'mohdmahebubia5@gmail.com',
+//         subject : 'Data Export',
+//         attachments: [
+//             {
+//               filename: 'excel.xlsx',
+//               path: excelFilePath,
+//             },
+//           ],
+//       }
+  
+//       transporter.sendMail(mailOptions, function(err, info){
+//         if(err){
+//           console.log(err);
+//         }
+//         else{
+//           console.log("Email has been sent :- ", info.response);
+//         }
+//         fs.unlinkSync(excelFilePath);
+//         client.release();
+//       });
+  
+//     } catch (error) {
+//       res.status(500).json({ error: error.message });
+//     }
+//   };
+
 module.exports = {
     getReturnsData,
     mileStoneInfo,
-    getMileStoneInfo
+    getMileStoneInfo,
+    // getExportedData
   };
