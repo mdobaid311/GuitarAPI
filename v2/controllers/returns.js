@@ -4,10 +4,10 @@ const xlsx = require('xlsx');
 const nodemailer = require("nodemailer");
 
 const getReturnsData = async(req, res) =>{
-    const StartDate = req.query.StartDate;
-    const EndDate = req.query.EndDate;
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
     
-    const query = `SELECT getReturnsData('${StartDate}','${EndDate}', 'Ref1', 'Ref2','Ref3', 'Ref4','Ref5','Ref6','Ref7', 'Ref8','Ref9', 'Ref10','Ref11');
+    const query = `SELECT getReturnsData('${startDate}','${endDate}', 'Ref1', 'Ref2','Ref3', 'Ref4','Ref5','Ref6','Ref7', 'Ref8','Ref9', 'Ref10','Ref11');
     FETCH ALL IN "Ref1";FETCH ALL IN "Ref2";FETCH ALL IN "Ref3";FETCH ALL IN "Ref4";FETCH ALL IN "Ref5";FETCH ALL IN "Ref6";FETCH ALL IN "Ref7";FETCH ALL IN "Ref8";FETCH ALL IN "Ref9";FETCH ALL IN "Ref10";FETCH ALL IN "Ref11";`;
 
    try {
