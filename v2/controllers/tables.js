@@ -63,7 +63,6 @@ const getFullSalesData = (req, res) => {
   FETCH ALL IN "Ref8";
    `;
 
- 
   try {
     client.query(query, (err, result) => {
       if (err) {
@@ -712,7 +711,6 @@ const UserRegistration = async (req, res) => {
     const result = await client.query(query, [username]);
 
     if (result.rows.length > 0) {
-
       return res.status(401).json({ message: "Username already exists" });
     }
     const saltRounds = 10;
@@ -729,42 +727,48 @@ const UserRegistration = async (req, res) => {
     const InsertQuery =
       "INSERT INTO users(firstname, lastname, username, password, role,id) VALUES($1, $2, $3, $4, $5,$6)";
     await client.query(InsertQuery, values);
-    sendVerifyMail(firstname,lastname,username, password);
+    sendVerifyMail(firstname, lastname, username, password);
     res.status(201).json({ message: "User registered successfully" });
-
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-const sendVerifyMail = async(firstname,lastname,username, password) => {
+const sendVerifyMail = async (firstname, lastname, username, password) => {
   try {
-    const transporter  = nodemailer.createTransport({
-      host : "smtp.gmail.com",
-      port:587,
-      secure : false,
-      requireTLS:true,
-      auth : {
-        user : 'guitarcenter.xit@gmail.com',
-        pass :'blnsziorfgrueolw'
-      }
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      requireTLS: true,
+      auth: {
+        user: "guitarcenter.xit@gmail.com",
+        pass: "blnsziorfgrueolw",
+      },
     });
     const mailOptions = {
-      from : 'guitarcenter.xit@gmail.com',
+      from: "guitarcenter.xit@gmail.com",
       to: username,
-      subject : 'Guitar Center Credentials',
-      html :'<p>Hi '+firstname+' ' +lastname+',<br><br>Welcome to guitar center, please find below credentials.<br><br><a href="http://3.111.38.149/">http://3.111.38.149/login</a><br><br>Username : '+username+' <br> password : '+password+' <br><br><br> Thanks and regards, <br>Guitar Center Admin</p>'
-    }
+      subject: "Guitar Center Credentials",
+      html:
+        "<p>Hi " +
+        firstname +
+        " " +
+        lastname +
+        ',<br><br>Welcome to guitar center, please find below credentials.<br><br><a href="http://3.111.38.149/">http://3.111.38.149/login</a><br><br>Username : ' +
+        username +
+        " <br> password : " +
+        password +
+        " <br><br><br> Thanks and regards, <br>Guitar Center Admin</p>",
+    };
 
-    transporter.sendMail(mailOptions, function(err, info){
-      if(err){
+    transporter.sendMail(mailOptions, function (err, info) {
+      if (err) {
         console.log(err);
-      }
-      else{
+      } else {
         console.log("Email has been sent :- ", info.response);
       }
     });
-
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -781,7 +785,7 @@ const UserLogin = async (req, res) => {
       const isMatch = await bcrypt.compare(password, result.rows[0].password);
       if (isMatch) {
         const { password, ...rest } = result.rows[0];
-        res.status(200).json({ ...rest});
+        res.status(200).json({ ...rest });
       } else {
         res.status(401).json({ message: "Invalid username or password" });
       }
@@ -850,9 +854,9 @@ const getMapData = async (req, res) => {
     "YYYY-MM-DD HH:mm:ss"
   );
 
-  const query = `select ship_to_state,sum(original_order_total_amount) from order_book_line where order_date_parsed>='${start_date_formatted}' and order_date_parsed <='${end_date_formatted}'  group by ship_to_state  `;
+  const query = `select ship_to_state,sum(original_order_total_amount),count(original_order_total_amount) from order_book_line where order_date_parsed>='${start_date_formatted}' and order_date_parsed <='${end_date_formatted}'  group by ship_to_state  `;
 
-  console.log(query)
+  console.log(query);
 
   try {
     client.query(query, (err, result) => {
@@ -872,7 +876,7 @@ const getMapData = async (req, res) => {
       const sortedArray = output.sort((a, b) => {
         return b[1] - a[1];
       });
-      console.log(sortedArray)
+      console.log(sortedArray);
 
       res.status(200).json(sortedArray);
     });
@@ -977,30 +981,44 @@ const getCityData = async (req, res) => {
 };
 
 const getDataForTimeSeies = async (req, res) => {
-  const  orderDate  = req.query.date;
+  const orderDate = req.query.date;
   const userid = [Number(req.query.userid)];
-  
-  try {
-  const timeLineDates = [];
-  const mileStoneQuery = `SELECT * FROM milestoneinfo WHERE userid=$1`;
-  const mileStoneResult = await client.query(mileStoneQuery, userid);
-  const originalDate = new Date(orderDate);
-  let msOne = new Date(originalDate);
-  let msTwo = new Date(originalDate);
-  let msThree = new Date(originalDate);
-  let msFour = new Date(originalDate);
-  let msFive = new Date(originalDate);
-  msOne.setDate(originalDate.getDate() + (Number(mileStoneResult.rows[0].msone)-1));
-  msTwo.setDate(originalDate.getDate() + (Number(mileStoneResult.rows[0].mstwo)-1));
-  msThree.setDate(originalDate.getDate() + (Number(mileStoneResult.rows[0].msthree)-1));
-  msFour.setDate(originalDate.getDate() + (Number(mileStoneResult.rows[0].msfour)-1));
-  msFive.setDate(originalDate.getDate() + (Number(mileStoneResult.rows[0].msfive)-1));
+  console.log(orderDate, userid);
 
-  msOne = msOne.toISOString().split("T")[0];
-  msTwo = msTwo.toISOString().split("T")[0];
-  msThree = msThree.toISOString().split("T")[0];
-  msFour = msFour.toISOString().split("T")[0];
-  const query = `SELECT gettimeseriesdataupdated('${orderDate}','${msOne}','${msTwo}','${msThree}','${msFour}','Ref1', 'Ref2','Ref3', 'Ref4','Ref5','Ref6');
+  try {
+    const timeLineDates = [];
+    const mileStoneQuery = `SELECT * FROM milestoneinfo WHERE userid=$1`;
+    const mileStoneResult = await client.query(mileStoneQuery, userid);
+    console.log(mileStoneResult.rows);
+    const userMilestones = Object.values(mileStoneResult.rows[0]).slice(1, 6);
+    console.log(userMilestones);
+    const originalDate = new Date(orderDate);
+    let msOne = new Date(originalDate);
+    let msTwo = new Date(originalDate);
+    let msThree = new Date(originalDate);
+    let msFour = new Date(originalDate);
+    let msFive = new Date(originalDate);
+    msOne.setDate(
+      originalDate.getDate() + (Number(mileStoneResult.rows[0].msone) - 1)
+    );
+    msTwo.setDate(
+      originalDate.getDate() + (Number(mileStoneResult.rows[0].mstwo) - 1)
+    );
+    msThree.setDate(
+      originalDate.getDate() + (Number(mileStoneResult.rows[0].msthree) - 1)
+    );
+    msFour.setDate(
+      originalDate.getDate() + (Number(mileStoneResult.rows[0].msfour) - 1)
+    );
+    msFive.setDate(
+      originalDate.getDate() + (Number(mileStoneResult.rows[0].msfive) - 1)
+    );
+
+    msOne = msOne.toISOString().split("T")[0];
+    msTwo = msTwo.toISOString().split("T")[0];
+    msThree = msThree.toISOString().split("T")[0];
+    msFour = msFour.toISOString().split("T")[0];
+    const query = `SELECT gettimeseriesdataupdated('${orderDate}','${msOne}','${msTwo}','${msThree}','${msFour}','Ref1', 'Ref2','Ref3', 'Ref4','Ref5','Ref6');
     FETCH ALL IN "Ref1";
     FETCH ALL IN "Ref2";
     FETCH ALL IN "Ref3";
@@ -1008,12 +1026,12 @@ const getDataForTimeSeies = async (req, res) => {
     FETCH ALL IN "Ref5";
     FETCH ALL IN "Ref6";
    `;
-  timeLineDates.push(
-    msOne,
-    msTwo,
-    msThree,
-    msFour
-  );
+    timeLineDates.push(
+      { date: msOne, milestone: userMilestones[0] },
+      { date: msTwo, milestone: userMilestones[1] },
+      { date: msThree, milestone: userMilestones[2] },
+      { date: msFour, milestone: userMilestones[3] }
+    );
 
     client.query(query, (err, result) => {
       if (err) {
@@ -1075,7 +1093,7 @@ const getDataForTimeSeies = async (req, res) => {
           return { status_name, lastDate, QtySum, lineTotalSum };
         });
 
-        res.status(200).json({ timeLineDates, mergedData });
+        res.status(200).json({ timeLineDates, mergedData, userMilestones });
       }
     });
   } catch (error) {

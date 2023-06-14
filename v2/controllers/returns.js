@@ -118,6 +118,13 @@ const getReturnsData = async(req, res) =>{
 
 const mileStoneInfo = async(req, res) =>{
     const {userid, msone, mstwo, msthree, msfour, msfive, mssix } = req.body;
+
+    console.log(req.body)
+
+    if(!userid || !msone || !mstwo || !msthree || !msfour || !msfive || !mssix){
+        return res.status(400).json({message : "Please enter all fields"});
+    }
+
     try {
         const checkUserQuery = `SELECT * FROM milestoneinfo WHERE userid =$1`;
         const checkUserResult = await client.query(checkUserQuery, [Number(userid)]);
