@@ -4,7 +4,7 @@ const {
     getReturnsData,
     mileStoneInfo,
     getMileStoneInfo,
-    getExportedData
+    // getExportedData
 } = require("../controllers/returns");
 
 const router = express.Router();
