@@ -22,19 +22,92 @@ const getReturnsData = async(req, res) =>{
         const returnsQtyByBrandName = result[9].rows;
         const returnsValByCategory = result[10].rows;
         const returnsValByBrandName = result[11].rows;
+        let total_units_sum = 0;
+        let total_value_sum = 0;
+            returnsFulfilled.forEach(element => {
+                total_units_sum = total_units_sum + Number(element.total_units);
+                total_value_sum = total_value_sum + Number(element.total_value);
+            });
+            let returnsFulfilledResult ={total_units_sum, total_value_sum, returnsFulfilled};
+
+            let order_count_sum = 0;
+            let exchange_book_amount_sum = 0;
+            let pending_refund_to_use_for_exchange_sum = 0;
+            exchangeOrder.forEach(element => {
+                order_count_sum = order_count_sum + Number(element.order_count);
+                exchange_book_amount_sum = exchange_book_amount_sum + Number(element.exchange_book_amount);
+                pending_refund_to_use_for_exchange_sum = pending_refund_to_use_for_exchange_sum + Number(element.pending_refund_to_use_for_exchange);
+            });
+            let exchangeOrderResult ={order_count_sum, exchange_book_amount_sum,pending_refund_to_use_for_exchange_sum, exchangeOrder};
+        
+        let total_units = 0;
+        let total_value = 0;
+        returnByFulfillmentType.forEach(element => {
+                total_units = total_units + Number(element.total_units);
+                total_value = total_value + Number(element.total_value);
+            });
+            let returnByFulfillmentTypeResult ={total_units, total_value, returnByFulfillmentType};
+
+        let reason_total_units = 0;
+        let return_total_value = 0;
+        returnReason.forEach(element => {
+            reason_total_units = reason_total_units + Number(element.total_units);
+            return_total_value = return_total_value + Number(element.total_value);
+            });
+            let returnReasonResult ={total_units : reason_total_units, total_value : return_total_value, returnReason};
+
+        let line_units = 0;
+        let line_charge = 0;
+        returnsByItemInfo.forEach(element => {
+            line_units = line_units + Number(element.line_units);
+            line_charge = line_charge + Number(element.line_charge);
+            });
+            let returnsByItemInfoResult ={line_units, line_charge, returnsByItemInfo};
+
+            let line_units_sum = 0;
+        let line_charge_sum = 0;
+        returnsByItems.forEach(element => {
+            line_units_sum = line_units_sum + Number(element.line_units);
+            line_charge_sum = line_charge_sum + Number(element.line_charge);
+            });
+            let returnsByItemsResult ={line_units : line_units_sum , line_charge : line_charge_sum, returnsByItems};
+
+            let sum = 0;
+            returnsQtyByCategory.forEach(element => {
+            sum = sum + Number(element.sum);
+            });
+            let returnsQtyByCategoryResult ={sum, returnsQtyByCategory};
+
+            let total_sum = 0;
+            returnsQtyByBrandName.forEach(element => {
+                total_sum = total_sum + Number(element.sum);
+            });
+            let returnsQtyByBrandNameResult ={sum : total_sum, returnsQtyByBrandName};
+
+            let total = 0;
+            returnsValByCategory.forEach(element => {
+                total = total + Number(element.sum);
+            });
+            let returnsValByCategoryResult ={sum : total, returnsValByCategory};
+
+            let BrandNameSum = 0;
+            returnsValByBrandName.forEach(element => {
+                BrandNameSum = BrandNameSum + Number(element.sum);
+            });
+            let returnsValByBrandNameResult ={sum : BrandNameSum, returnsValByBrandName};
 
         res.status(200).json({
             returnStats,
-            returnsFulfilled,
-            returnByFulfillmentType,
-            exchangeOrder,
-            returnReason,
-            returnsByItemInfo,
-            returnsByItems,
-            returnsQtyByCategory,
-            returnsQtyByBrandName,
-            returnsValByCategory,
-            returnsValByBrandName
+            returnsFulfilledResult,
+            returnByFulfillmentTypeResult,
+            exchangeOrderResult,
+            returnReasonResult,
+            returnsByItemInfoResult,
+            returnsByItemsResult,
+            returnsQtyByCategoryResult,
+            returnsQtyByBrandNameResult,
+            returnsValByCategoryResult,
+            returnsValByBrandNameResult
           });
         }
     });
