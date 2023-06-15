@@ -1114,10 +1114,10 @@ const thresholdInfo = async(req, res) => {
     }
 
     try {
-        const checkUserQuery = `SELECT * FROM thresholdinfo WHERE userid =$1`;
+        const checkUserQuery = `SELECT * FROM configurethreshold WHERE userid =$1`;
         const checkUserResult = await client.query(checkUserQuery, [Number(userid)]);
-        const updateQuery = `UPDATE thresholdinfo SET tsone = $2, tstwo = $3, tsthree = $4 WHERE userid =$1`;        
-        const insertQuery = `INSERT INTO thresholdinfo(userid, tsone, tstwo,tsthree) VALUES($1, $2, $3,$4)`;
+        const updateQuery = `UPDATE configurethreshold SET tsone = $2, tstwo = $3, tsthree = $4 WHERE userid =$1`;        
+        const insertQuery = `INSERT INTO configurethreshold(userid, tsone, tstwo,tsthree) VALUES($1, $2, $3,$4)`;
         const query = (checkUserResult.rows.length > 0) ?(updateQuery) :(insertQuery);
         const values = [userid, tsone, tstwo, tsthree];
         const result = await client.query(query, values);
@@ -1129,7 +1129,7 @@ const thresholdInfo = async(req, res) => {
 
 const getThresholdInfo = async(req, res) =>{
   try {
-    const query = `SELECT * FROM thresholdinfo WHERE userid =$1`;
+    const query = `SELECT * FROM configurethreshold WHERE userid =$1`;
     const userid = [req.query.userid];
     const result = await client.query(query, userid);
     if(result.rows.length <1) {
