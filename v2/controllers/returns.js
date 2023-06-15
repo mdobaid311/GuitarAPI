@@ -47,6 +47,7 @@ const getReturnsData = async(req, res) =>{
         
         let total_units = 0;
         let total_value = 0;
+         
         returnByFulfillmentType.forEach(element => {
                 total_units = total_units + Number(element.total_units);
                 total_value = total_value + Number(element.total_value);
