@@ -160,33 +160,95 @@ const getMileStoneInfo = async(req, res) => {
     }
 };
 
-const scheduleExportData = (req, res) => {
-  const { query, schedule } = req.body;
+// const scheduleExportData = (req, res) => {
+//   const { query, schedule } = req.body;
   
-  cron.schedule(`*/${schedule} * * * *`, () => {
-    getExportedData(query, res);
-  });
+//   cron.schedule(`*/${schedule} * * * *`, () => {
+//     getExportedData(query, res);
+//   });
 
-  res.status(200).json({ message: "Data export scheduled successfully" });
-};
+//   res.status(200).json({ message: "Data export scheduled successfully" });
+// };
 
-const getExportedData = async(query, res) => {
+// const getExportedData = async(query, res) => {
+//     try {
+//         // const query = `SELECT * FROM order_book_line limit 10`;
+//         const result = await client.query(query);
+//         const data = result.rows;
+//         const workbook = xlsx.utils.book_new();
+//         const worksheet = xlsx.utils.json_to_sheet(data);
+//         xlsx.utils.book_append_sheet(workbook, worksheet, 'Sheet 1');
+//         const excelFilePath = 'path/to/excel.xlsx';
+//         xlsx.writeFile(workbook, excelFilePath);
+//         excelExportData(excelFilePath, username)
+//     } catch (error) {
+//         res.status(500).json({error : error.message});
+//     }
+// };
+
+// const excelExportData = async(excelFilePath,username) => {
+//     try {
+//       const transporter  = nodemailer.createTransport({
+//         host : "smtp.gmail.com",
+//         port:587,
+//         secure : false,
+//         requireTLS:true,
+//         auth : {
+//           user : 'guitarcenter.xit@gmail.com',
+//           pass :'blnsziorfgrueolw'
+//         }
+//       });
+//       const mailOptions = {
+//         from : 'guitarcenter.xit@gmail.com',
+//         to: 'mohdmahebubia5@gmail.com',
+//         subject : 'Data Export',
+//         attachments: [
+//             {
+//               filename: 'excel.xlsx',
+//               path: excelFilePath,
+//             },
+//           ],
+//       }
+  
+//       transporter.sendMail(mailOptions, function(err, info){
+//         if(err){
+//           console.log(err);
+//         }
+//         else{
+//             res.status(201).json({ message: "Data Exported successfully" });
+//         }
+//         fs.unlinkSync(excelFilePath);
+//         client.release();
+//       });
+  
+//     } catch (error) {
+//       res.status(500).json({ error: error.message });
+//     }
+//   };
+
+cron.schedule('*/5 * * * *', () => {
+  getExportedData();
+});
+
+const getExportedData = async(req, res) => {
     try {
-        // const query = `SELECT * FROM order_book_line limit 10`;
+        const query = `SELECT * FROM order_book_line limit 10`;
         const result = await client.query(query);
         const data = result.rows;
         const workbook = xlsx.utils.book_new();
+        console.log(workbook);
         const worksheet = xlsx.utils.json_to_sheet(data);
+        console.log(worksheet);
         xlsx.utils.book_append_sheet(workbook, worksheet, 'Sheet 1');
-        const excelFilePath = 'path/to/excel.xlsx';
+        const excelFilePath = '../excel.xlsx';
         xlsx.writeFile(workbook, excelFilePath);
-        excelExportData(excelFilePath, username)
+        excelExportData(excelFilePath, res);        
     } catch (error) {
         res.status(500).json({error : error.message});
     }
 };
 
-const excelExportData = async(excelFilePath,username) => {
+const excelExportData = async(excelFilePath,res ) => {
     try {
       const transporter  = nodemailer.createTransport({
         host : "smtp.gmail.com",
@@ -215,10 +277,10 @@ const excelExportData = async(excelFilePath,username) => {
           console.log(err);
         }
         else{
-          console.log("Email has been sent :- ", info.response);
+            res.status(201).json({ message: "Data Exported successfully" });
         }
-        // fs.unlinkSync(excelFilePath);
-        // client.release();
+        fs.unlinkSync(excelFilePath);
+        client.release();
       });
   
     } catch (error) {
@@ -230,5 +292,5 @@ module.exports = {
     getReturnsData,
     mileStoneInfo,
     getMileStoneInfo,
-    scheduleExportData
+    // scheduleExportData
   };

@@ -12,7 +12,9 @@ const {
   getAllUser,
   getTimeSeriesData,
   getCityData,
-  getDataForTimeSeies
+  getDataForTimeSeies,
+  thresholdInfo,
+  getThresholdInfo
 } = require("../controllers/tables");
 
 const router = express.Router();
@@ -29,5 +31,7 @@ router.get("/users",getAllUser)
 router.get("/timeSeriesData", getTimeSeriesData);
 router.get("/getCityData", getCityData);
 router.get("/getDataForTimeSeries", getDataForTimeSeies);
+router.get("/getThresholdInfo", getThresholdInfo);
+router.post("/thresholdInfo", thresholdInfo);
 
 module.exports = router;
