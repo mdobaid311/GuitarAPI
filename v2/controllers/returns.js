@@ -226,9 +226,9 @@ const getMileStoneInfo = async(req, res) => {
 //     }
 //   };
 
-cron.schedule('*/5 * * * *', () => {
-  getExportedData();
-});
+// cron.schedule('*/5 * * * *', () => {
+//   getExportedData();
+// });
 
 const getExportedData = async(req, res) => {
     try {
