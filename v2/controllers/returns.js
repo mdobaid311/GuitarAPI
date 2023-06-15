@@ -2,6 +2,7 @@ const client = require("../config/postgre_client");
 const fs = require('fs');
 const xlsx = require('xlsx');
 const nodemailer = require("nodemailer");
+const cron = require('node-cron');
 
 const getReturnsData = async(req, res) =>{
     const startDate = req.query.startDate;
@@ -158,65 +159,75 @@ const getMileStoneInfo = async(req, res) => {
     }
 };
 
-// const getExportedData = async(req, res) => {
-//     try {
-//         const query = `SELECT * FROM order_book_line limit 10`;
-//         const result = await client.query(query);
-//         const data = result.rows;
-//         const workbook = xlsx.utils.book_new();
-//         const worksheet = xlsx.utils.json_to_sheet(data);
-//         xlsx.utils.book_append_sheet(workbook, worksheet, 'Sheet 1');
-//         const excelFilePath = 'path/to/excel.xlsx';
-//         xlsx.writeFile(workbook, excelFilePath);
-//         excelExportData(excelFilePath, username)
-//     } catch (error) {
-//         res.status(500).json({error : error.message});
-//     }
-// };
+const scheduleExportData = (req, res) => {
+  const { query, schedule } = req.body;
+  
+  cron.schedule(`*/${schedule} * * * *`, () => {
+    getExportedData(query, res);
+  });
 
-// const excelExportData = async(excelFilePath,username) => {
-//     try {
-//       const transporter  = nodemailer.createTransport({
-//         host : "smtp.gmail.com",
-//         port:587,
-//         secure : false,
-//         requireTLS:true,
-//         auth : {
-//           user : 'guitarcenter.xit@gmail.com',
-//           pass :'blnsziorfgrueolw'
-//         }
-//       });
-//       const mailOptions = {
-//         from : 'guitarcenter.xit@gmail.com',
-//         to: 'mohdmahebubia5@gmail.com',
-//         subject : 'Data Export',
-//         attachments: [
-//             {
-//               filename: 'excel.xlsx',
-//               path: excelFilePath,
-//             },
-//           ],
-//       }
+  res.status(200).json({ message: "Data export scheduled successfully" });
+};
+
+const getExportedData = async(query, res) => {
+    try {
+        // const query = `SELECT * FROM order_book_line limit 10`;
+        const result = await client.query(query);
+        const data = result.rows;
+        const workbook = xlsx.utils.book_new();
+        const worksheet = xlsx.utils.json_to_sheet(data);
+        xlsx.utils.book_append_sheet(workbook, worksheet, 'Sheet 1');
+        const excelFilePath = 'path/to/excel.xlsx';
+        xlsx.writeFile(workbook, excelFilePath);
+        excelExportData(excelFilePath, username)
+    } catch (error) {
+        res.status(500).json({error : error.message});
+    }
+};
+
+const excelExportData = async(excelFilePath,username) => {
+    try {
+      const transporter  = nodemailer.createTransport({
+        host : "smtp.gmail.com",
+        port:587,
+        secure : false,
+        requireTLS:true,
+        auth : {
+          user : 'guitarcenter.xit@gmail.com',
+          pass :'blnsziorfgrueolw'
+        }
+      });
+      const mailOptions = {
+        from : 'guitarcenter.xit@gmail.com',
+        to: 'mohdmahebubia5@gmail.com',
+        subject : 'Data Export',
+        attachments: [
+            {
+              filename: 'excel.xlsx',
+              path: excelFilePath,
+            },
+          ],
+      }
   
-//       transporter.sendMail(mailOptions, function(err, info){
-//         if(err){
-//           console.log(err);
-//         }
-//         else{
-//           console.log("Email has been sent :- ", info.response);
-//         }
-//         fs.unlinkSync(excelFilePath);
-//         client.release();
-//       });
+      transporter.sendMail(mailOptions, function(err, info){
+        if(err){
+          console.log(err);
+        }
+        else{
+          console.log("Email has been sent :- ", info.response);
+        }
+        // fs.unlinkSync(excelFilePath);
+        // client.release();
+      });
   
-//     } catch (error) {
-//       res.status(500).json({ error: error.message });
-//     }
-//   };
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
 
 module.exports = {
     getReturnsData,
     mileStoneInfo,
     getMileStoneInfo,
-    // getExportedData
+    scheduleExportData
   };
