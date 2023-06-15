@@ -1090,7 +1090,10 @@ const getDataForTimeSeies = async (req, res) => {
             }
           });
 
-          return { status_name, lastDate, QtySum, lineTotalSum };
+          const QtySumTotal = QtySum.reduce((a, b) => a + b, 0);
+          const lineTotalSumTotal = lineTotalSum.reduce((a, b) => a + b, 0);
+
+          return { status_name,QtySumTotal,lineTotalSumTotal, lastDate, QtySum, lineTotalSum };
         });
 
         res.status(200).json({ timeLineDates, mergedData, userMilestones });
