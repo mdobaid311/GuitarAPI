@@ -2,6 +2,7 @@ const client = require("../config/postgre_client");
 const fs = require('fs');
 const xlsx = require('xlsx');
 const nodemailer = require("nodemailer");
+const cron = require('node-cron');
 
 const getReturnsData = async(req, res) =>{
     const startDate = req.query.startDate;
@@ -131,10 +132,10 @@ const mileStoneInfo = async(req, res) =>{
     }
 
     try {
-        const checkUserQuery = `SELECT * FROM milestoneinfo WHERE userid =$1`;
+        const checkUserQuery = `SELECT * FROM configuremilestone WHERE userid =$1`;
         const checkUserResult = await client.query(checkUserQuery, [Number(userid)]);
-        const updateQuery = `UPDATE milestoneinfo SET msone = $2, mstwo = $3, msthree = $4, msfour = $5, msfive = $6, mssix = $7 WHERE userid =$1`;        
-        const insertQuery = `INSERT INTO milestoneinfo(userid, msone, mstwo,msthree, msfour, msfive, mssix) VALUES($1, $2, $3,$4,$5,$6,$7)`;
+        const updateQuery = `UPDATE configuremilestone SET msone = $2, mstwo = $3, msthree = $4, msfour = $5, msfive = $6, mssix = $7 WHERE userid =$1`;        
+        const insertQuery = `INSERT INTO configuremilestone (userid, msone, mstwo,msthree, msfour, msfive, mssix) VALUES($1, $2, $3,$4,$5,$6,$7)`;
         const query = (checkUserResult.rows.length > 0) ?(updateQuery) :(insertQuery);
         const values = [userid, msone, mstwo, msthree, msfour, msfive, mssix ];
         const result = await client.query(query, values);
@@ -147,7 +148,7 @@ const mileStoneInfo = async(req, res) =>{
 const getMileStoneInfo = async(req, res) => {
 
     try {
-        const query = `SELECT * FROM milestoneinfo WHERE userid =$1`;
+        const query = `SELECT * FROM configuremilestone WHERE userid =$1`;
         const userid = [req.query.userid];
         const result = await client.query(query, userid);
         if(result.rows.length <1) {
@@ -159,65 +160,107 @@ const getMileStoneInfo = async(req, res) => {
     }
 };
 
-// const getExportedData = async(req, res) => {
-//     try {
-//         const query = `SELECT * FROM order_book_line limit 10`;
-//         const result = await client.query(query);
-//         const data = result.rows;
-//         const workbook = xlsx.utils.book_new();
-//         const worksheet = xlsx.utils.json_to_sheet(data);
-//         xlsx.utils.book_append_sheet(workbook, worksheet, 'Sheet 1');
-//         const excelFilePath = 'path/to/excel.xlsx';
-//         xlsx.writeFile(workbook, excelFilePath);
-//         excelExportData(excelFilePath, username)
-//     } catch (error) {
-//         res.status(500).json({error : error.message});
-//     }
-// };
+const scheduleExportData = async(req, res) => {
+  const { query } = req.body;
+  cron.schedule('0 17 * * *', () => {
+    getExportedData(query, res);
+  });
+};
 
-// const excelExportData = async(excelFilePath,username) => {
-//     try {
-//       const transporter  = nodemailer.createTransport({
-//         host : "smtp.gmail.com",
-//         port:587,
-//         secure : false,
-//         requireTLS:true,
-//         auth : {
-//           user : 'guitarcenter.xit@gmail.com',
-//           pass :'blnsziorfgrueolw'
-//         }
-//       });
-//       const mailOptions = {
-//         from : 'guitarcenter.xit@gmail.com',
-//         to: 'mohdmahebubia5@gmail.com',
-//         subject : 'Data Export',
-//         attachments: [
-//             {
-//               filename: 'excel.xlsx',
-//               path: excelFilePath,
-//             },
-//           ],
-//       }
+const getExportedData = async(query, res) => {
+    try {
+        const result = await client.query(query);
+        const data = result.rows;
+        const workbook = xlsx.utils.book_new();
+        const worksheet = xlsx.utils.json_to_sheet(data);
+        xlsx.utils.book_append_sheet(workbook, worksheet, 'Sheet 1');
+        const excelFilePath = '../excel.xlsx';
+        xlsx.writeFile(workbook, excelFilePath);
+        excelExportData(excelFilePath, res);        
+    } catch (error) {
+        res.status(500).json({error : error.message});
+    }
+};
+
+const excelExportData = async(excelFilePath,res ) => {
+    try {
+      const transporter  = nodemailer.createTransport({
+        host : "smtp.gmail.com",
+        port:587,
+        secure : false,
+        requireTLS:true,
+        auth : {
+          user : 'guitarcenter.xit@gmail.com',
+          pass :'blnsziorfgrueolw'
+        }
+      });
+      const mailOptions = {
+        from : 'guitarcenter.xit@gmail.com',
+        to: 'domnic.nadar@gmail.com',
+        subject : 'Data Export',
+        attachments: [
+            {
+              filename: 'excel.xlsx',
+              path: excelFilePath,
+            },
+          ],
+      }
   
-//       transporter.sendMail(mailOptions, function(err, info){
-//         if(err){
-//           console.log(err);
-//         }
-//         else{
-//           console.log("Email has been sent :- ", info.response);
-//         }
-//         fs.unlinkSync(excelFilePath);
-//         client.release();
-//       });
+      transporter.sendMail(mailOptions, function(err, info){
+        if(err){
+          console.log(err);
+        }
+        else{
+            res.status(201).json({ message: "Data Exported successfully" });
+        }
+        fs.unlinkSync(excelFilePath);
+        client.release();
+      });
   
-//     } catch (error) {
-//       res.status(500).json({ error: error.message });
-//     }
-//   };
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+
+  const createUserConfigurations = async(req, res) => {
+    const  userConfigName = req.query.userConfigName;
+    try {
+      if(userConfigName === 'widgets'){
+        const {userid, isSalesEnabled } = req.body;
+        const checkUserQuery = `SELECT * FROM configurewidgets WHERE userid =$1`;
+        const checkUserResult = await client.query(checkUserQuery, [Number(userid)]);
+        const updateQuery = `UPDATE configurewidgets SET issalesenabled = $2 WHERE userid =$1`;        
+        const insertQuery = `INSERT INTO configurewidgets (userid, issalesenabled ) VALUES($1, $2)`;
+        const query = (checkUserResult.rows.length > 0) ?(updateQuery) :(insertQuery);
+        const values = [userid, isSalesEnabled ];
+        const result = await client.query(query, values);
+        res.status(201).json({ message : (query === insertQuery) ?("Widgets info created successfully") : ("Widgets info updated successfully")});
+      }
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+
+  const getUserConfigurations = async(req, res) =>{
+    
+    try {
+      const query = `SELECT * FROM configurewidgets WHERE userid =$1`;
+      const userid = [req.query.userid];
+      const result = await client.query(query, userid);
+      if(result.rows.length <1) {
+          return res.status(404).json({message : `no data found for userid : ${userid}`});
+      }
+      res.status(201).json({result : result.rows});
+  } catch (error) {
+      res.status(500).json({error : error.message});
+  }
+  };
 
 module.exports = {
     getReturnsData,
     mileStoneInfo,
     getMileStoneInfo,
-    // getExportedData
+    scheduleExportData,
+    createUserConfigurations,
+    getUserConfigurations
   };

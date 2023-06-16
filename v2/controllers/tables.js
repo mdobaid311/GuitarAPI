@@ -1104,6 +1104,43 @@ const getDataForTimeSeies = async (req, res) => {
   }
 };
 
+const thresholdInfo = async(req, res) => {
+  const {userid, tsone, tstwo, tsthree } = req.body;
+
+    console.log(req.body)
+
+    if(!userid || !tsone || !tstwo || !tsthree ){
+        return res.status(400).json({message : "Please enter all fields"});
+    }
+
+    try {
+        const checkUserQuery = `SELECT * FROM configurethreshold WHERE userid =$1`;
+        const checkUserResult = await client.query(checkUserQuery, [Number(userid)]);
+        const updateQuery = `UPDATE configurethreshold SET tsone = $2, tstwo = $3, tsthree = $4 WHERE userid =$1`;        
+        const insertQuery = `INSERT INTO configurethreshold(userid, tsone, tstwo,tsthree) VALUES($1, $2, $3,$4)`;
+        const query = (checkUserResult.rows.length > 0) ?(updateQuery) :(insertQuery);
+        const values = [userid, tsone, tstwo, tsthree];
+        const result = await client.query(query, values);
+        res.status(201).json({ message : (query === insertQuery) ?("Threshold info created successfully") : ("Threshold info updated successfully")});
+    } catch (error) {
+        res.status(500).json({error : error.message});
+    }
+};
+
+const getThresholdInfo = async(req, res) =>{
+  try {
+    const query = `SELECT * FROM configurethreshold WHERE userid =$1`;
+    const userid = [req.query.userid];
+    const result = await client.query(query, userid);
+    if(result.rows.length <1) {
+        return res.status(404).json({message : `no data found for username : ${userid}`});
+    }
+    res.status(201).json({result : result.rows});
+} catch (error) {
+    res.status(500).json({error : error.message});
+}
+};
+
 module.exports = {
   getTableData,
   getFullSalesData,
@@ -1117,4 +1154,6 @@ module.exports = {
   getTimeSeriesData,
   getCityData,
   getDataForTimeSeies,
+  thresholdInfo,
+  getThresholdInfo
 };
