@@ -125,8 +125,6 @@ const getReturnsData = async(req, res) =>{
 const mileStoneInfo = async(req, res) =>{
     const {userid, msone, mstwo, msthree, msfour, msfive, mssix } = req.body;
 
-    console.log(req.body)
-
     if(!userid || !msone || !mstwo || !msthree || !msfour || !msfive || !mssix){
         return res.status(400).json({message : "Please enter all fields"});
     }
@@ -161,13 +159,17 @@ const getMileStoneInfo = async(req, res) => {
 };
 
 const scheduleExportData = async(req, res) => {
-  const { query } = req.body;
+  const {userid, query } = req.body;
+  // console.log(query);
+  //'*/5 * * * *'   5 minutes
+  //'0 17 * * *'    5pm
   cron.schedule('0 17 * * *', () => {
-    getExportedData(query, res);
+    console.log(query);
+    getExportedData(query,userid, res);
   });
 };
 
-const getExportedData = async(query, res) => {
+const getExportedData = async(query,userid, res) => {
     try {
         const result = await client.query(query);
         const data = result.rows;
@@ -176,13 +178,19 @@ const getExportedData = async(query, res) => {
         xlsx.utils.book_append_sheet(workbook, worksheet, 'Sheet 1');
         const excelFilePath = '../excel.xlsx';
         xlsx.writeFile(workbook, excelFilePath);
-        excelExportData(excelFilePath, res);        
+        excelExportData(excelFilePath,userid, res);        
     } catch (error) {
         res.status(500).json({error : error.message});
     }
 };
 
-const excelExportData = async(excelFilePath,res ) => {
+const excelExportData = async(excelFilePath,userid, res ) => {
+
+  const check = `SELECT * FROM users WHERE id = $1`;
+  const id = [Number(userid)];
+  const user = await client.query(check, id);
+  const firstname = user.rows[0].firstname;
+  const lastName = user.rows[0].lastname;
     try {
       const transporter  = nodemailer.createTransport({
         host : "smtp.gmail.com",
@@ -196,8 +204,9 @@ const excelExportData = async(excelFilePath,res ) => {
       });
       const mailOptions = {
         from : 'guitarcenter.xit@gmail.com',
-        to: 'domnic.nadar@gmail.com',
-        subject : 'Data Export',
+        to: 'mohdmahebubia5@gmail.com, mohdmahebub0003@gmail.com',
+        subject : 'Guitar Center Report',
+        html:"<p>Hi " +firstname +" " +lastName +",<br>Please find below the Guitar Center report<br><br></p>",
         attachments: [
             {
               filename: 'excel.xlsx',
@@ -222,10 +231,8 @@ const excelExportData = async(excelFilePath,res ) => {
     }
   };
 
-  const createUserConfigurations = async(req, res) => {
-    const  userConfigName = req.query.userConfigName;
-    try {
-      if(userConfigName === 'widgets'){
+  const createWidgetsInfo = async(req, res) => {
+    try {     
         const {userid, isSalesEnabled } = req.body;
         const checkUserQuery = `SELECT * FROM configurewidgets WHERE userid =$1`;
         const checkUserResult = await client.query(checkUserQuery, [Number(userid)]);
@@ -235,32 +242,85 @@ const excelExportData = async(excelFilePath,res ) => {
         const values = [userid, isSalesEnabled ];
         const result = await client.query(query, values);
         res.status(201).json({ message : (query === insertQuery) ?("Widgets info created successfully") : ("Widgets info updated successfully")});
-      }
+         
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   };
 
-  const getUserConfigurations = async(req, res) =>{
-    
-    try {
-      const query = `SELECT * FROM configurewidgets WHERE userid =$1`;
-      const userid = [req.query.userid];
-      const result = await client.query(query, userid);
-      if(result.rows.length <1) {
-          return res.status(404).json({message : `no data found for userid : ${userid}`});
-      }
-      res.status(201).json({result : result.rows});
+  const createStatusInfo = async(req, res) =>{
+    try {     
+      const {userid, statusCode } = req.body;  
+      const query = `INSERT INTO configurestatus (userid, statuscode ) VALUES($1, $2)`;
+      const values = [userid, statusCode ];
+      const result = await client.query(query, values);
+      res.status(201).json({ message : "Widgets info created successfully"});       
   } catch (error) {
-      res.status(500).json({error : error.message});
+    res.status(500).json({ error: error.message });
   }
   };
+
+  const createQueriesInfo = async(req, res) => {
+    try {     
+      const {userid, queryVal, xaxis, yaxis, name } = req.body;      
+      const query = `INSERT INTO configurequeries (userid,  query, xaxis, yaxis, name ) VALUES($1, $2, $3, $4,$5)`;
+      const values = [userid, queryVal, xaxis, yaxis, name ];
+      const result = await client.query(query, values);
+      res.status(201).json({ message : "queries info created successfully"});       
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+  };
+
+  const getUserConfigurations = async (req, res) => {
+    const id = Number(req.query.id);
+    console.log(id);
+    const check = `SELECT * FROM users WHERE id = 45`;
+    
+    console.log(user.rows[0].firstname);
+    try {
+      const query = `
+        SELECT getuserconfigurations(${id},'ref1', 'ref2','ref3', 'ref4','ref5');
+        FETCH ALL IN "ref1";
+        FETCH ALL IN "ref2";
+        FETCH ALL IN "ref3";
+        FETCH ALL IN "ref4";
+        FETCH ALL IN "ref5";
+      `;
+  
+      client.query(query, (err, result) => {
+        if (err) {
+          console.error(err);
+          return res.status(500).send(err);
+        }
+    
+        const milestoneData = result[1].rows;
+        const thresholdData = result[2].rows;
+        const widgetsData = result[3].rows;
+        const StatusFilterData = result[4].rows;
+        const queriesData = result[5].rows;
+  
+        res.status(200).json({
+            milestoneData,
+            thresholdData,
+            widgetsData,
+            StatusFilterData,
+            queriesData
+        });
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+  
 
 module.exports = {
     getReturnsData,
     mileStoneInfo,
     getMileStoneInfo,
     scheduleExportData,
-    createUserConfigurations,
+    createWidgetsInfo,
+    createStatusInfo,
+    createQueriesInfo,
     getUserConfigurations
   };
