@@ -273,11 +273,11 @@ const excelExportData = async(excelFilePath,userid, res ) => {
   };
 
   const getUserConfigurations = async (req, res) => {
-    const id = Number(req.query.id);
+    const id = Number(req.query.userid);
     console.log(id);
     const check = `SELECT * FROM users WHERE id = 45`;
     
-    console.log(user.rows[0].firstname);
+     
     try {
       const query = `
         SELECT getuserconfigurations(${id},'ref1', 'ref2','ref3', 'ref4','ref5');
