@@ -12,7 +12,7 @@ const {
   getAllUser,
   getTimeSeriesData,
   getCityData,
-  getDataForTimeSeies,
+  getDataForTimeSeries,
   thresholdInfo,
   getThresholdInfo
 } = require("../controllers/tables");
@@ -30,7 +30,7 @@ router.get("/map", getMapData);
 router.get("/users",getAllUser)
 router.get("/timeSeriesData", getTimeSeriesData);
 router.get("/getCityData", getCityData);
-router.get("/getDataForTimeSeries", getDataForTimeSeies);
+router.get("/getDataForTimeSeries", getDataForTimeSeries);
 router.get("/getThresholdInfo", getThresholdInfo);
 router.post("/thresholdInfo", thresholdInfo);
 

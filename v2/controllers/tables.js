@@ -980,14 +980,14 @@ const getCityData = async (req, res) => {
   }
 };
 
-const getDataForTimeSeies = async (req, res) => {
+const getDataForTimeSeries = async (req, res) => {
   const orderDate = req.query.date;
   const userid = [Number(req.query.userid)];
   console.log(orderDate, userid);
 
   try {
     const timeLineDates = [];
-    const mileStoneQuery = `SELECT * FROM milestoneinfo WHERE userid=$1`;
+    const mileStoneQuery = `SELECT * FROM configuremilestone WHERE userid=$1`;
     const mileStoneResult = await client.query(mileStoneQuery, userid);
     console.log(mileStoneResult.rows);
     const userMilestones = Object.values(mileStoneResult.rows[0]).slice(1, 6);
@@ -1153,7 +1153,7 @@ module.exports = {
   getAllUser,
   getTimeSeriesData,
   getCityData,
-  getDataForTimeSeies,
+  getDataForTimeSeries,
   thresholdInfo,
   getThresholdInfo
 };
