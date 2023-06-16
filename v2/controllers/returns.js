@@ -159,17 +159,17 @@ const getMileStoneInfo = async(req, res) => {
 };
 
 const scheduleExportData = async(req, res) => {
-  const { query } = req.body;
-  console.log(query);
+  const {userid, query } = req.body;
+  // console.log(query);
   //'*/5 * * * *'   5 minutes
   //'0 17 * * *'    5pm
-  cron.schedule('*/5 * * * *', () => {
+  cron.schedule('0 17 * * *', () => {
     console.log(query);
-    getExportedData(query, res);
+    getExportedData(query,userid, res);
   });
 };
 
-const getExportedData = async(query, res) => {
+const getExportedData = async(query,userid, res) => {
     try {
         const result = await client.query(query);
         const data = result.rows;
@@ -178,13 +178,19 @@ const getExportedData = async(query, res) => {
         xlsx.utils.book_append_sheet(workbook, worksheet, 'Sheet 1');
         const excelFilePath = '../excel.xlsx';
         xlsx.writeFile(workbook, excelFilePath);
-        excelExportData(excelFilePath, res);        
+        excelExportData(excelFilePath,userid, res);        
     } catch (error) {
         res.status(500).json({error : error.message});
     }
 };
 
-const excelExportData = async(excelFilePath,res ) => {
+const excelExportData = async(excelFilePath,userid, res ) => {
+
+  const check = `SELECT * FROM users WHERE id = $1`;
+  const id = [Number(userid)];
+  const user = await client.query(check, id);
+  const firstname = user.rows[0].firstname;
+  const lastName = user.rows[0].lastname;
     try {
       const transporter  = nodemailer.createTransport({
         host : "smtp.gmail.com",
@@ -197,11 +203,10 @@ const excelExportData = async(excelFilePath,res ) => {
         }
       });
       const mailOptions = {
-        
-
         from : 'guitarcenter.xit@gmail.com',
-        to: 'mustafeez.m@xitsolutionsinc.com',
-        subject : 'Data Export',
+        to: 'mohdmahebubia5@gmail.com, mohdmahebub0003@gmail.com',
+        subject : 'Guitar Center Report',
+        html:"<p>Hi " +firstname +" " +lastName +",<br>Please find below the Guitar Center report<br><br></p>",
         attachments: [
             {
               filename: 'excel.xlsx',
@@ -270,6 +275,9 @@ const excelExportData = async(excelFilePath,res ) => {
   const getUserConfigurations = async (req, res) => {
     const id = Number(req.query.id);
     console.log(id);
+    const check = `SELECT * FROM users WHERE id = 45`;
+    
+    console.log(user.rows[0].firstname);
     try {
       const query = `
         SELECT getuserconfigurations(${id},'ref1', 'ref2','ref3', 'ref4','ref5');
