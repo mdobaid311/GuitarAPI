@@ -4,11 +4,18 @@ const helmet = require("helmet");
 require("dotenv").config();
 const morgan = require("morgan");
 const cors = require("cors");
+const path = require("path");
+const cookieParser = require("cookie-parser");
+const crypto = require("crypto");
 
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(cors());
 app.use(helmet());
+app.use(express.urlencoded({extended : false}));
+// app.use()
+
+
 
 const queryRouter = require("./v1/routes/container-details");
 const authRouter = require("./v1/routes/auth");
