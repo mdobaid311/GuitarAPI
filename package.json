@@ -3,6 +3,7 @@
     "async": "^3.2.4",
     "bcrypt": "^5.1.0",
     "cassandra-driver": "^4.6.4",
+    "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
@@ -14,7 +15,9 @@
     "node-cron": "^3.0.2",
     "nodemailer": "^6.9.3",
     "nodemon": "^2.0.21",
+    "path": "^0.12.7",
     "pg": "^8.11.0",
+    "twilio": "^4.12.0",
     "xlsx": "^0.18.5"
   },
   "name": "scylladb-api",

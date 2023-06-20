@@ -2,6 +2,13 @@ const client = require("../config/postgre_client");
 const moment = require("moment");
 const bcrypt = require("bcrypt");
 const nodemailer = require("nodemailer");
+require("dotenv").config();
+const accountSid = process.env.ACCOUNT_SID;
+const authToken = process.env.AUTH_TOKEN;
+// const smsKey = process.env.SMS_SECRET_KEY;
+let twilioNum = process.env.TWILIO_PHONE_NUMBER;
+const twilioClient = require("twilio")(accountSid, authToken);
+
 
 const {
   formatDate,
@@ -1141,6 +1148,24 @@ const getThresholdInfo = async(req, res) =>{
 }
 };
 
+const sendSMS = async(req, res) => {
+  try {
+    const { toNum, message } = req.body;
+
+    // Send SMS using Twilio
+    const response = await twilioClient.messages.create({
+      body: message,
+      from: twilioNum,
+      to: toNum
+    });
+
+    res.status(200).json({ success: true, message: 'SMS sent successfully', data: response });
+  } catch (error) {
+    console.error('Error sending SMS:', error);
+    res.status(500).json({ success: false, message: 'Failed to send SMS', error: error.message });
+  }
+};
+
 module.exports = {
   getTableData,
   getFullSalesData,
@@ -1155,5 +1180,6 @@ module.exports = {
   getCityData,
   getDataForTimeSeries,
   thresholdInfo,
-  getThresholdInfo
+  getThresholdInfo,
+  sendSMS
 };

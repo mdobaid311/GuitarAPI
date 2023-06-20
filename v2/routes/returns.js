@@ -8,7 +8,8 @@ const {
     createWidgetsInfo,
     getUserConfigurations,
     createStatusInfo,
-    createQueriesInfo
+    createQueriesInfo,
+    createScheduledQueriesInfo
 } = require("../controllers/returns");
 
 const router = express.Router();
@@ -20,6 +21,7 @@ router.post("/scheduleExportData", scheduleExportData);
 router.post("/createWidgetsInfo", createWidgetsInfo);
 router.post("/createStatusInfo", createStatusInfo);
 router.post("/createQueriesInfo", createQueriesInfo);
+router.post("/createScheduledQueriesInfo", createScheduledQueriesInfo);
 router.get("/getUserConfigurations", getUserConfigurations);
 
 module.exports = router;

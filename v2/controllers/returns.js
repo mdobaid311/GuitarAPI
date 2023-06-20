@@ -158,18 +158,62 @@ const getMileStoneInfo = async(req, res) => {
     }
 };
 
-const scheduleExportData = async(req, res) => {
-  const {userid, query } = req.body;
-  // console.log(query);
-  //'*/5 * * * *'   5 minutes
-  //'0 17 * * *'    5pm
-  cron.schedule('0 17 * * *', () => {
-    console.log(query);
-    getExportedData(query,userid, res);
+// const scheduleExportData = async(req, res) => {
+//   const {query, toList } = req.body;
+// //  const query1 = "SELECT * FROM order_book_line limit 100";
+// //  const query2 = "SELECT * FROM order_book_header limit 100";
+// //  const query3 = "SELECT * FROM order_book_taxes limit 100";
+// //'*/1 * * * *'
+// //'0 17 * * *'
+//   cron.schedule('*/1 * * * *', () => {
+//     const query =  `SELECT * FROM configurequeries order by time`;
+//     const result = await client.query(query);
+//     const queries = result.rows;
+//     queries.forEach(list ={
+//       cron.schedule(`0 ${list.time} * * *`, () => {
+//         getExportedData(list.query, list.emails, res);
+//       })
+//     });    
+//   });
+// };
+
+const createScheduledQueriesInfo = async(req, res) =>{
+  try {     
+    const {userid, query,  emails, time} = req.body;  
+    const insertQquery = `INSERT INTO schedulequeries (userid, query, emails, time ) VALUES($1, $2,$3, $4)`;
+    const values = [userid, query,  emails, time];
+    const result = await client.query(insertQquery, values);
+    res.status(201).json({ message : "Schedule query info created successfully"});       
+} catch (error) {
+  res.status(500).json({ error: error.message });
+}
+};
+
+// const scheduleExportData = async (req, res) => {
+//   const { query, toList , time} = req.body;
+//   // `*/${list.time} * * * *`
+//   cron.schedule(`0 ${list.time} * * *`, async () => {
+//     const query =  `SELECT * FROM schedulequeries order by time`;
+//     const result = await client.query(query);
+//     const queries = result.rows;
+//     console.log(queries);
+//     queries.forEach(list => {
+//       cron.schedule(`*/${list.time} * * * *`, async () => {
+//         await getExportedData(list.query, list.emails, res);
+//       });
+//     });
+//   });
+// };
+
+const scheduleExportData = async (req, res) => {
+  const { query, toList , time} = req.body;
+  cron.schedule(`0 ${list.time} * * *`, async () => {
+    getExportedData(query, toList, res);
   });
 };
 
-const getExportedData = async(query,userid, res) => {
+
+const getExportedData = async(query, toList, res) => {
     try {
         const result = await client.query(query);
         const data = result.rows;
@@ -178,20 +222,15 @@ const getExportedData = async(query,userid, res) => {
         xlsx.utils.book_append_sheet(workbook, worksheet, 'Sheet 1');
         const excelFilePath = '../excel.xlsx';
         xlsx.writeFile(workbook, excelFilePath);
-        excelExportData(excelFilePath,userid, res);        
+        excelExportData(excelFilePath, toList, res);        
     } catch (error) {
         res.status(500).json({error : error.message});
     }
 };
 
-const excelExportData = async(excelFilePath,userid, res ) => {
+const excelExportData = async(excelFilePath, toList, res ) => {
 
-  const check = `SELECT * FROM users WHERE id = $1`;
-  const id = [Number(userid)];
-  const user = await client.query(check, id);
-  const firstname = user.rows[0].firstname;
-  const lastName = user.rows[0].lastname;
-    try {
+     try {
       const transporter  = nodemailer.createTransport({
         host : "smtp.gmail.com",
         port:587,
@@ -204,9 +243,9 @@ const excelExportData = async(excelFilePath,userid, res ) => {
       });
       const mailOptions = {
         from : 'guitarcenter.xit@gmail.com',
-        to: 'mohdmahebubia5@gmail.com, mohdmahebub0003@gmail.com',
+        to: toList,
         subject : 'Guitar Center Report',
-        html:"<p>Hi " +firstname +" " +lastName +",<br>Please find below the Guitar Center report<br><br></p>",
+        html:"<p>Hi!<br>Please find attached sales analysis report.<br><br><br><br>Please note.<br>This is a Guitar Center application generated report.<br><br></p>",
         attachments: [
             {
               filename: 'excel.xlsx',
@@ -262,9 +301,9 @@ const excelExportData = async(excelFilePath,userid, res ) => {
 
   const createQueriesInfo = async(req, res) => {
     try {     
-      const {userid, queryVal, xaxis, yaxis, name } = req.body;      
-      const query = `INSERT INTO configurequeries (userid,  query, xaxis, yaxis, name ) VALUES($1, $2, $3, $4,$5)`;
-      const values = [userid, queryVal, xaxis, yaxis, name ];
+      const {userid, queryVal, xaxis, yaxis, name} = req.body;      
+      const query = `INSERT INTO configurequeries (userid,  query, xaxis, yaxis, name) VALUES($1, $2, $3, $4,$5)`;
+      const values = [userid, queryVal, xaxis, yaxis, name];
       const result = await client.query(query, values);
       res.status(201).json({ message : "queries info created successfully"});       
   } catch (error) {
@@ -274,10 +313,6 @@ const excelExportData = async(excelFilePath,userid, res ) => {
 
   const getUserConfigurations = async (req, res) => {
     const id = Number(req.query.id);
-    console.log(id);
-    const check = `SELECT * FROM users WHERE id = 45`;
-    
-    console.log(user.rows[0].firstname);
     try {
       const query = `
         SELECT getuserconfigurations(${id},'ref1', 'ref2','ref3', 'ref4','ref5');
@@ -322,5 +357,6 @@ module.exports = {
     createWidgetsInfo,
     createStatusInfo,
     createQueriesInfo,
-    getUserConfigurations
+    getUserConfigurations,
+    createScheduledQueriesInfo
   };
