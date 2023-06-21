@@ -1148,21 +1148,83 @@ const getThresholdInfo = async(req, res) =>{
 }
 };
 
-const sendSMS = async(req, res) => {
+
+const sendSMS = async (req, res) => {
   try {
-    const { toNum, message } = req.body;
+    const { toNum, salesVal } = req.body;
+    const phoneNumbers = toNum.split(',');
 
-    // Send SMS using Twilio
-    const response = await twilioClient.messages.create({
-      body: message,
-      from: twilioNum,
-      to: toNum
-    });
+    for (const phoneNumber of phoneNumbers) {
+      let message =
+        salesVal < 100000
+          ? 'Sales total is less than threshold'
+          : salesVal > 1000000
+          ? 'Sales total is greater than threshold'
+          : '';
 
-    res.status(200).json({ success: true, message: 'SMS sent successfully', data: response });
+      const response = await twilioClient.messages.create({
+        body: message,
+        from: twilioNum,
+        to: phoneNumber.trim()
+      });
+
+      console.log(`SMS sent to ${phoneNumber}: ${response.sid}`);
+    }
+    res
+      .status(200)
+      .json({ success: true, message: 'SMS sent successfully' });
   } catch (error) {
     console.error('Error sending SMS:', error);
-    res.status(500).json({ success: false, message: 'Failed to send SMS', error: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: 'Failed to send SMS', error: error.message });
+  }
+};
+
+const getSalesAvgData = async(req, res) =>{ 
+  try {
+    const {timeInterval, startDate, endDate } = req.body;
+    console.log(startDate, endDate);
+    const start_date_formatted = moment(startDate, "YYYY-MM-DD HH:mm").format(
+      "YYYY-MM-DD HH:mm:ss"
+    );
+    const end_date_formatted = moment(endDate, "YYYY-MM-DD HH:mm").format(
+      "YYYY-MM-DD HH:mm:ss"
+    );
+    const query = `SELECT getsalesavgdata(${timeInterval},'${start_date_formatted}','${end_date_formatted}','Ref1', 'Ref2','Ref3', 'Ref4','Ref5','Ref6','Ref7','Ref8');
+    FETCH ALL IN "Ref1";
+    FETCH ALL IN "Ref2";
+    FETCH ALL IN "Ref3";
+    FETCH ALL IN "Ref4";
+    FETCH ALL IN "Ref5";
+    FETCH ALL IN "Ref6";
+    FETCH ALL IN "Ref7";
+    FETCH ALL IN "Ref8";
+   `;
+   const result = await client.query(query);
+   const gcTatalData = result[1].rows;
+   const gcDataByChannel = result[2].rows;
+   const gcDataByFulfillmentType = result[3].rows;
+   const gcDataByItemInfo = result[4].rows;
+   const mfTatalData = result[5].rows;
+   const mfDataByChannel = result[6].rows;
+   const mfDataByFulfillmentType = result[7].rows;
+   const mfDataByItemInfo = result[8].rows;
+
+   res.status(201).json({
+    gcTatalData,
+    gcDataByChannel,
+    gcDataByFulfillmentType,
+    gcDataByItemInfo,
+    mfTatalData,
+    mfDataByChannel,
+    mfDataByFulfillmentType,
+    mfDataByItemInfo
+   })
+  } catch (error) {
+    res
+    .status(500)
+    .json({  message:error.message });
   }
 };
 
@@ -1181,5 +1243,6 @@ module.exports = {
   getDataForTimeSeries,
   thresholdInfo,
   getThresholdInfo,
-  sendSMS
+  sendSMS,
+  getSalesAvgData
 };
