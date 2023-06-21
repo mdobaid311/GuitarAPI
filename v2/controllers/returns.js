@@ -207,7 +207,7 @@ const createScheduledQueriesInfo = async(req, res) =>{
 
 const scheduleExportData = async (req, res) => {
   const { query, toList , time} = req.body;
-  cron.schedule(`0 ${list.time} * * *`, async () => {
+  cron.schedule(`0 ${time} * * *`, async () => {
     getExportedData(query, toList, res);
   });
 };
