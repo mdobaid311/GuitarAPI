@@ -352,6 +352,37 @@ const excelExportData = async(excelFilePath, toList, res ) => {
       res.status(500).json({ error: error.message });
     }
   };
+
+  const jobs = [];
+  // console.log(jobs);
+const testSchedule = async (req, res) => {
+  const { mins, hour, day, month, query, name,  toList} = req.body;
+  console.log(hour);
+
+  let minsS = mins || '*';
+  let hourS = hour || '*';
+  let dayS = day || '*';
+  let monthS = month || '*';
+  let schedule = `*/${minsS} ${hourS} ${dayS} ${monthS} *`;
+
+  console.log(schedule);
+  const callback = () => {
+    console.log(`Cron Job ${name} executed`);
+    getExportedData(query, toList, res);
+  };
+  createCronJob(schedule, callback, name);
+  res.json({ success: true, message: `Cron Job ${name} scheduled` });
+};
+
+const createCronJob = (schedule, callback, name) => {
+  console.log("mahebub");
+  const job = cron.schedule(schedule, callback);
+  jobs.push({ name, job });
+  job.start();
+return;
+};
+
+
   
 
 module.exports = {
@@ -363,5 +394,6 @@ module.exports = {
     createStatusInfo,
     createQueriesInfo,
     getUserConfigurations,
-    createScheduledQueriesInfo
+    createScheduledQueriesInfo,
+    testSchedule
   };

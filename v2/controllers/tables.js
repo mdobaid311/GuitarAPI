@@ -1183,50 +1183,80 @@ const sendSMS = async (req, res) => {
 
 const getSalesAvgData = async(req, res) =>{ 
   try {
-    const {timeInterval, startDate, endDate } = req.body;
-    console.log(startDate, endDate);
+    const timeInterval = req.query.timeInterval;
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
     const start_date_formatted = moment(startDate, "YYYY-MM-DD HH:mm").format(
       "YYYY-MM-DD HH:mm:ss"
     );
     const end_date_formatted = moment(endDate, "YYYY-MM-DD HH:mm").format(
       "YYYY-MM-DD HH:mm:ss"
     );
-    const query = `SELECT getsalesavgdata(${timeInterval},'${start_date_formatted}','${end_date_formatted}','Ref1', 'Ref2','Ref3', 'Ref4','Ref5','Ref6','Ref7','Ref8');
+    const query = `SELECT getsalesavgdataupdated(${timeInterval},'${start_date_formatted}','${end_date_formatted}','Ref1', 'Ref2');
     FETCH ALL IN "Ref1";
     FETCH ALL IN "Ref2";
-    FETCH ALL IN "Ref3";
-    FETCH ALL IN "Ref4";
-    FETCH ALL IN "Ref5";
-    FETCH ALL IN "Ref6";
-    FETCH ALL IN "Ref7";
-    FETCH ALL IN "Ref8";
    `;
    const result = await client.query(query);
-   const gcTatalData = result[1].rows;
-   const gcDataByChannel = result[2].rows;
-   const gcDataByFulfillmentType = result[3].rows;
-   const gcDataByItemInfo = result[4].rows;
-   const mfTatalData = result[5].rows;
-   const mfDataByChannel = result[6].rows;
-   const mfDataByFulfillmentType = result[7].rows;
-   const mfDataByItemInfo = result[8].rows;
+   const totalStats = result[1].rows;
+   const chartSeriesData = result[2].rows;
+  
+  const gcTotalStats = totalStats.filter((item) => item.enterprise_key === 'GC').map((item) => {
+    const ordertotalsum = parseInt(item.ordertotalsum);
+    const lineqtysum = parseInt(item.lineqtysum);
+    const ordertotalavg = parseInt(item.ordertotalavg);
+    const lineqtyavg = parseInt(item.lineqtyavg);
+    return { ...item, ordertotalsum, lineqtysum, ordertotalavg,lineqtyavg };
+  });
+  const mfTotalStats = totalStats.filter((item) => item.enterprise_key === 'MF').map((item) => {
+    const ordertotalsum = parseInt(item.ordertotalsum);
+    const lineqtysum = parseInt(item.lineqtysum);
+    const ordertotalavg = parseInt(item.ordertotalavg);
+    const lineqtyavg = parseInt(item.lineqtyavg);
+    return { ...item, ordertotalsum, lineqtysum, ordertotalavg,lineqtyavg };
+  });  
+  const mfChartSeriesData = chartSeriesData.filter((item) => item.enterprise_key === 'MF').map((item) => {
+    const datetime = moment(item.datetime).format("MMM-DD HH:mm");
+    const ordertotalsum = parseInt(item.ordertotalsum);
+    const lineqtysum = parseInt(item.lineqtysum);
+    const ordertotalavg = parseInt(item.ordertotalavg);
+    const lineqtyavg = parseInt(item.lineqtyavg);
+    return { ...item, datetime, ordertotalsum, lineqtysum, ordertotalavg,lineqtyavg };
+  });
+
+  const gcChartSeriesData = chartSeriesData.filter((item) => item.enterprise_key === 'GC').map((item) => {
+    const datetime = moment(item.datetime).format("MMM-DD HH:mm");
+    const ordertotalsum = parseInt(item.ordertotalsum);
+    const lineqtysum = parseInt(item.lineqtysum);
+    const ordertotalavg = parseInt(item.ordertotalavg);
+    const lineqtyavg = parseInt(item.lineqtyavg);
+    return { ...item, datetime, ordertotalsum, lineqtysum, ordertotalavg,lineqtyavg };
+  });
 
    res.status(201).json({
-    gcTatalData,
-    gcDataByChannel,
-    gcDataByFulfillmentType,
-    gcDataByItemInfo,
-    mfTatalData,
-    mfDataByChannel,
-    mfDataByFulfillmentType,
-    mfDataByItemInfo
-   })
+    GCData :{
+      name : 'GC',
+      gcTotalStats: gcTotalStats,
+      chartSeriesData: {
+        enterprise_key: "GC",
+        chartSeries : gcChartSeriesData
+      }
+    },
+    MFData :{
+      name : 'MF',
+      mfTotalStats: mfTotalStats,
+      mfChartSeriesData :{
+        enterprise_key: "MF",
+        chartSeries : mfChartSeriesData
+      }
+    }    
+   });
   } catch (error) {
     res
     .status(500)
     .json({  message:error.message });
   }
 };
+
 
 module.exports = {
   getTableData,
