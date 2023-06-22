@@ -179,11 +179,17 @@ const getMileStoneInfo = async(req, res) => {
 
 const createScheduledQueriesInfo = async(req, res) =>{
   try {     
-    const {userid, query,  emails, time} = req.body;  
-    const insertQquery = `INSERT INTO schedulequeries (userid, query, emails, time ) VALUES($1, $2,$3, $4)`;
-    const values = [userid, query,  emails, time];
+    const {userid, query, emails, name, day, week, month, subject } = req.body; 
+  
+    let weekS = week || '*';
+    let dayS = day || '*';
+    let monthS = month || '*';
+     schedule = `*/3  *  ${dayS}  ${monthS}  ${weekS}`;
+     console.log(schedule); 
+    const insertQquery = `INSERT INTO schedulequeries (userid, query, emails, schedule, name, subject) VALUES($1, $2,$3, $4, $5, $6)`;
+    const values = [userid, query,  emails, schedule, name, subject];
     const result = await client.query(insertQquery, values);
-    res.status(201).json({ message : "Schedule query info created successfully"});       
+    res.status(201).json({ message : "Scheduler info created successfully"});       
 } catch (error) {
   res.status(500).json({ error: error.message });
 }
@@ -213,7 +219,7 @@ const scheduleExportData = async (req, res) => {
 };
 
 
-const getExportedData = async(query, toList, res) => {
+const getExportedData = async(query, toList, subject, res) => {
     try {
         const result = await client.query(query);
         const data = result.rows;
@@ -222,13 +228,13 @@ const getExportedData = async(query, toList, res) => {
         xlsx.utils.book_append_sheet(workbook, worksheet, 'Sheet 1');
         const excelFilePath = '../excel.xlsx';
         xlsx.writeFile(workbook, excelFilePath);
-        excelExportData(excelFilePath, toList, res);        
+        excelExportData(excelFilePath, toList, subject, res);        
     } catch (error) {
         res.status(500).json({error : error.message});
     }
 };
 
-const excelExportData = async(excelFilePath, toList, res ) => {
+const excelExportData = async(excelFilePath, toList, subject, res ) => {
 
      try {
       const transporter  = nodemailer.createTransport({
@@ -244,7 +250,7 @@ const excelExportData = async(excelFilePath, toList, res ) => {
       const mailOptions = {
         from : 'guitarcenter.xit@gmail.com',
         to: toList,
-        subject : 'Guitar Center Report',
+        subject : subject,
         html:"<p>Hi!<br>Please find attached sales analysis report.<br><br><br><br>Please note.<br>This is a Guitar Center application generated report.<br><br></p>",
         attachments: [
             {
@@ -355,6 +361,21 @@ const excelExportData = async(excelFilePath, toList, res ) => {
 
   const jobs = [];
   // console.log(jobs);
+
+  cron.schedule(`*/10 * * * *`, async (req, res) => {
+    const schedulerQuery = `SELECT * FROM schedulequeries`
+    const result = await client.query(schedulerQuery);
+    console.log(result.rows);
+    const schedulers = result.rows;
+    schedulers.forEach(item =>{
+      const callback = () => {
+        console.log(`Cron Job ${item.name} executed`);
+        getExportedData(item.query, item.emails, item.subject, res);
+      };
+      createCronJob(item.schedule, callback);
+    });
+  });
+
 const testSchedule = async (req, res) => {
   const { mins, hour, day, month, query, name,  toList} = req.body;
   console.log(hour);
@@ -374,10 +395,9 @@ const testSchedule = async (req, res) => {
   res.json({ success: true, message: `Cron Job ${name} scheduled` });
 };
 
-const createCronJob = (schedule, callback, name) => {
+const createCronJob = (schedule, callback) => {
   console.log("mahebub");
   const job = cron.schedule(schedule, callback);
-  jobs.push({ name, job });
   job.start();
 return;
 };
