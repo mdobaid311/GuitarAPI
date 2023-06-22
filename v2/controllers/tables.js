@@ -1183,9 +1183,9 @@ const sendSMS = async (req, res) => {
 
 const getSalesAvgData = async(req, res) =>{ 
   try {
-    const timeInterval = req.query.timeInterval;
-    const startDate = req.query.startDate;
-    const endDate = req.query.endDate;
+    const {timeInterval, startDate, endDate } = req.query;
+    console.log(req.body)
+    console.log(startDate, endDate);
     const start_date_formatted = moment(startDate, "YYYY-MM-DD HH:mm").format(
       "YYYY-MM-DD HH:mm:ss"
     );
@@ -1235,16 +1235,16 @@ const getSalesAvgData = async(req, res) =>{
    res.status(201).json({
     GCData :{
       name : 'GC',
-      gcTotalStats: gcTotalStats,
-      chartSeriesData: {
+      totalStats: gcTotalStats,
+      chartSeries: {
         enterprise_key: "GC",
         chartSeries : gcChartSeriesData
       }
     },
     MFData :{
       name : 'MF',
-      mfTotalStats: mfTotalStats,
-      mfChartSeriesData :{
+      totalStats: mfTotalStats,
+      chartSeries :{
         enterprise_key: "MF",
         chartSeries : mfChartSeriesData
       }

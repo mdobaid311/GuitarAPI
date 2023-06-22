@@ -7,13 +7,12 @@ const getOrgChartDataRange = async (req, res) => {
 
   const { start_date, end_date, type } = req.query;
 
-  console.log(type);
-
   if (type === "order_capture_channel") {
     try {
       const query = `select enterprise_key, order_capture_channel, sum(original_order_total_amount) as original_order_total_amount  from order_book_line
     where order_date_parsed>='${start_date}' and order_date_parsed<='${end_date}' group by order_capture_channel,
     enterprise_key;`;
+
 
       await client.query(query, (err, result) => {
         if (err) {
@@ -165,6 +164,7 @@ const getOrgChartDataRange = async (req, res) => {
     where order_date_parsed>='${start_date}' and order_date_parsed<='${end_date}' group by item_info,
     enterprise_key;`;
 
+    console.log(query)
       await client.query(query, (err, result) => {
         if (err) {
           res.status(500).json(err);
