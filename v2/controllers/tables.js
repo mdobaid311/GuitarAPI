@@ -1184,7 +1184,6 @@ const sendSMS = async (req, res) => {
 const getSalesAvgData = async(req, res) =>{ 
   try {
     const {timeInterval, startDate, endDate } = req.body;
-    console.log(startDate, endDate);
     const start_date_formatted = moment(startDate, "YYYY-MM-DD HH:mm").format(
       "YYYY-MM-DD HH:mm:ss"
     );
