@@ -354,7 +354,7 @@ const excelExportData = async(excelFilePath, toList, res ) => {
   };
 
   const jobs = [];
-  console.log(jobs);
+  // console.log(jobs);
 const testSchedule = async (req, res) => {
   const { mins, hour, day, month, query, name,  toList} = req.body;
   console.log(hour);
