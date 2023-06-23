@@ -9,7 +9,6 @@ const authToken = process.env.AUTH_TOKEN;
 let twilioNum = process.env.TWILIO_PHONE_NUMBER;
 const twilioClient = require("twilio")(accountSid, authToken);
 
-
 const {
   formatDate,
   getFulfillmentDescription,
@@ -990,13 +989,20 @@ const getCityData = async (req, res) => {
 const getDataForTimeSeries = async (req, res) => {
   const orderDate = req.query.date;
   const userid = [Number(req.query.userid)];
-  console.log(orderDate, userid);
 
   try {
     const timeLineDates = [];
     const mileStoneQuery = `SELECT * FROM configuremilestone WHERE userid=$1`;
-    const mileStoneResult = await client.query(mileStoneQuery, userid);
-    console.log(mileStoneResult.rows);
+    let mileStoneResult = await client.query(mileStoneQuery, userid);
+
+    if (mileStoneResult.rows.length < 1) {
+      const insertQuery = `INSERT INTO configuremilestone (userid, msone, mstwo,msthree, msfour, msfive, mssix) VALUES($1, $2, $3,$4,$5,$6,$7)`;
+      const insertValues = [+userid, 5, 10, 15, 20, 25, 30];
+      const insertResult = await client.query(insertQuery, insertValues);
+
+      mileStoneResult = await client.query(mileStoneQuery, userid);
+    }
+
     const userMilestones = Object.values(mileStoneResult.rows[0]).slice(1, 6);
     console.log(userMilestones);
     const originalDate = new Date(orderDate);
@@ -1100,7 +1106,14 @@ const getDataForTimeSeries = async (req, res) => {
           const QtySumTotal = QtySum.reduce((a, b) => a + b, 0);
           const lineTotalSumTotal = lineTotalSum.reduce((a, b) => a + b, 0);
 
-          return { status_name,QtySumTotal,lineTotalSumTotal, lastDate, QtySum, lineTotalSum };
+          return {
+            status_name,
+            QtySumTotal,
+            lineTotalSumTotal,
+            lastDate,
+            QtySum,
+            lineTotalSum,
+          };
         });
 
         res.status(200).json({ timeLineDates, mergedData, userMilestones });
@@ -1111,80 +1124,98 @@ const getDataForTimeSeries = async (req, res) => {
   }
 };
 
-const thresholdInfo = async(req, res) => {
-  const {userid, tsone, tstwo, tsthree } = req.body;
+const thresholdInfo = async (req, res) => {
+  const { userid, tsone, tstwo, tsthree } = req.body;
 
-    console.log(req.body)
+  if (!userid || !tsone || !tstwo || !tsthree) {
+    return res.status(400).json({ message: "Please enter all fields" });
+  }
 
-    if(!userid || !tsone || !tstwo || !tsthree ){
-        return res.status(400).json({message : "Please enter all fields"});
-    }
-
-    try {
-        const checkUserQuery = `SELECT * FROM configurethreshold WHERE userid =$1`;
-        const checkUserResult = await client.query(checkUserQuery, [Number(userid)]);
-        const updateQuery = `UPDATE configurethreshold SET tsone = $2, tstwo = $3, tsthree = $4 WHERE userid =$1`;        
-        const insertQuery = `INSERT INTO configurethreshold(userid, tsone, tstwo,tsthree) VALUES($1, $2, $3,$4)`;
-        const query = (checkUserResult.rows.length > 0) ?(updateQuery) :(insertQuery);
-        const values = [userid, tsone, tstwo, tsthree];
-        const result = await client.query(query, values);
-        res.status(201).json({ message : (query === insertQuery) ?("Threshold info created successfully") : ("Threshold info updated successfully")});
-    } catch (error) {
-        res.status(500).json({error : error.message});
-    }
+  try {
+    const checkUserQuery = `SELECT * FROM configurethreshold WHERE userid =$1`;
+    const checkUserResult = await client.query(checkUserQuery, [
+      Number(userid),
+    ]);
+    const updateQuery = `UPDATE configurethreshold SET tsone = $2, tstwo = $3, tsthree = $4 WHERE userid =$1`;
+    const insertQuery = `INSERT INTO configurethreshold(userid, tsone, tstwo,tsthree) VALUES($1, $2, $3,$4)`;
+    const query = checkUserResult.rows.length > 0 ? updateQuery : insertQuery;
+    const values = [userid, tsone, tstwo, tsthree];
+    const result = await client.query(query, values);
+    res.status(201).json({
+      message:
+        query === insertQuery
+          ? "Threshold info created successfully"
+          : "Threshold info updated successfully",
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
-const getThresholdInfo = async(req, res) =>{
+const getThresholdInfo = async (req, res) => {
   try {
     const query = `SELECT * FROM configurethreshold WHERE userid =$1`;
     const userid = [req.query.userid];
     const result = await client.query(query, userid);
-    if(result.rows.length <1) {
-        return res.status(404).json({message : `no data found for username : ${userid}`});
+    if (result.rows.length < 1) {
+      // if no data found for the user then create a new record for the user with default values of threshold 10, 20 and 21
+      const insertQuery = `INSERT INTO configurethreshold(userid, tsone, tstwo,tsthree) VALUES($1, $2, $3,$4)`;
+      const values = [+userid, 10, 20, 21];
+      const result = await client.query(insertQuery, values);
+      console.log(result);
+      return res.status(201).json({
+        result: [
+          {
+            userid: +req.query.userid,
+            tsone: "10",
+            tstwo: "20",
+            tsthree: "21",
+          },
+        ],
+      });
     }
-    res.status(201).json({result : result.rows});
-} catch (error) {
-    res.status(500).json({error : error.message});
-}
+    res.status(201).json({ result: result.rows });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
-
 
 const sendSMS = async (req, res) => {
   try {
     const { toNum, salesVal } = req.body;
-    const phoneNumbers = toNum.split(',');
+    const phoneNumbers = toNum.split(",");
 
     for (const phoneNumber of phoneNumbers) {
       let message =
         salesVal < 100000
-          ? 'Sales total is less than threshold'
+          ? "Sales total is less than threshold"
           : salesVal > 1000000
-          ? 'Sales total is greater than threshold'
-          : '';
+          ? "Sales total is greater than threshold"
+          : "";
 
       const response = await twilioClient.messages.create({
         body: message,
         from: twilioNum,
-        to: phoneNumber.trim()
+        to: phoneNumber.trim(),
       });
 
       console.log(`SMS sent to ${phoneNumber}: ${response.sid}`);
     }
-    res
-      .status(200)
-      .json({ success: true, message: 'SMS sent successfully' });
+    res.status(200).json({ success: true, message: "SMS sent successfully" });
   } catch (error) {
-    console.error('Error sending SMS:', error);
-    res
-      .status(500)
-      .json({ success: false, message: 'Failed to send SMS', error: error.message });
+    console.error("Error sending SMS:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to send SMS",
+      error: error.message,
+    });
   }
 };
 
-const getSalesAvgData = async(req, res) =>{ 
+const getSalesAvgData = async (req, res) => {
   try {
-    const {timeInterval, startDate, endDate } = req.query;
-    console.log(req.body)
+    const { timeInterval, startDate, endDate } = req.query;
+    console.log(req.body);
     console.log(startDate, endDate);
     const start_date_formatted = moment(startDate, "YYYY-MM-DD HH:mm").format(
       "YYYY-MM-DD HH:mm:ss"
@@ -1196,67 +1227,98 @@ const getSalesAvgData = async(req, res) =>{
     FETCH ALL IN "Ref1";
     FETCH ALL IN "Ref2";
    `;
-   const result = await client.query(query);
-   const totalStats = result[1].rows;
-   const chartSeriesData = result[2].rows;
-  
-  const gcTotalStats = totalStats.filter((item) => item.enterprise_key === 'GC').map((item) => {
-    const ordertotalsum = parseInt(item.ordertotalsum);
-    const lineqtysum = parseInt(item.lineqtysum);
-    const ordertotalavg = parseInt(item.ordertotalavg);
-    const lineqtyavg = parseInt(item.lineqtyavg);
-    return { ...item, ordertotalsum, lineqtysum, ordertotalavg,lineqtyavg };
-  });
-  const mfTotalStats = totalStats.filter((item) => item.enterprise_key === 'MF').map((item) => {
-    const ordertotalsum = parseInt(item.ordertotalsum);
-    const lineqtysum = parseInt(item.lineqtysum);
-    const ordertotalavg = parseInt(item.ordertotalavg);
-    const lineqtyavg = parseInt(item.lineqtyavg);
-    return { ...item, ordertotalsum, lineqtysum, ordertotalavg,lineqtyavg };
-  });  
-  const mfChartSeriesData = chartSeriesData.filter((item) => item.enterprise_key === 'MF').map((item) => {
-    const datetime = moment(item.datetime).format("MMM-DD HH:mm");
-    const ordertotalsum = parseInt(item.ordertotalsum);
-    const lineqtysum = parseInt(item.lineqtysum);
-    const ordertotalavg = parseInt(item.ordertotalavg);
-    const lineqtyavg = parseInt(item.lineqtyavg);
-    return { ...item, datetime, ordertotalsum, lineqtysum, ordertotalavg,lineqtyavg };
-  });
+    const result = await client.query(query);
+    const totalStats = result[1].rows;
+    const chartSeriesData = result[2].rows;
 
-  const gcChartSeriesData = chartSeriesData.filter((item) => item.enterprise_key === 'GC').map((item) => {
-    const datetime = moment(item.datetime).format("MMM-DD HH:mm");
-    const ordertotalsum = parseInt(item.ordertotalsum);
-    const lineqtysum = parseInt(item.lineqtysum);
-    const ordertotalavg = parseInt(item.ordertotalavg);
-    const lineqtyavg = parseInt(item.lineqtyavg);
-    return { ...item, datetime, ordertotalsum, lineqtysum, ordertotalavg,lineqtyavg };
-  });
+    const gcTotalStats = totalStats
+      .filter((item) => item.enterprise_key === "GC")
+      .map((item) => {
+        const ordertotalsum = parseInt(item.ordertotalsum);
+        const lineqtysum = parseInt(item.lineqtysum);
+        const ordertotalavg = parseInt(item.ordertotalavg);
+        const lineqtyavg = parseInt(item.lineqtyavg);
+        return {
+          ...item,
+          ordertotalsum,
+          lineqtysum,
+          ordertotalavg,
+          lineqtyavg,
+        };
+      });
+    const mfTotalStats = totalStats
+      .filter((item) => item.enterprise_key === "MF")
+      .map((item) => {
+        const ordertotalsum = parseInt(item.ordertotalsum);
+        const lineqtysum = parseInt(item.lineqtysum);
+        const ordertotalavg = parseInt(item.ordertotalavg);
+        const lineqtyavg = parseInt(item.lineqtyavg);
+        return {
+          ...item,
+          ordertotalsum,
+          lineqtysum,
+          ordertotalavg,
+          lineqtyavg,
+        };
+      });
+    const mfChartSeriesData = chartSeriesData
+      .filter((item) => item.enterprise_key === "MF")
+      .map((item) => {
+        const datetime = moment(item.datetime).format("MMM-DD HH:mm");
+        const ordertotalsum = parseInt(item.ordertotalsum);
+        const lineqtysum = parseInt(item.lineqtysum);
+        const ordertotalavg = parseInt(item.ordertotalavg);
+        const lineqtyavg = parseInt(item.lineqtyavg);
+        return {
+          ...item,
+          datetime,
+          ordertotalsum,
+          lineqtysum,
+          ordertotalavg,
+          lineqtyavg,
+        };
+      });
 
-   res.status(201).json({
-    GCData :{
-      name : 'GC',
-      totalStats: gcTotalStats,
-      chartSeries: {
-        enterprise_key: "GC",
-        chartSeries : gcChartSeriesData
-      }
-    },
-    MFData :{
-      name : 'MF',
-      totalStats: mfTotalStats,
-      chartSeries :{
-        enterprise_key: "MF",
-        chartSeries : mfChartSeriesData
-      }
-    }    
-   });
+    const gcChartSeriesData = chartSeriesData
+      .filter((item) => item.enterprise_key === "GC")
+      .map((item) => {
+        const datetime = moment(item.datetime).format("MMM-DD HH:mm");
+        const ordertotalsum = parseInt(item.ordertotalsum);
+        const lineqtysum = parseInt(item.lineqtysum);
+        const ordertotalavg = parseInt(item.ordertotalavg);
+        const lineqtyavg = parseInt(item.lineqtyavg);
+        return {
+          ...item,
+          datetime,
+          ordertotalsum,
+          lineqtysum,
+          ordertotalavg,
+          lineqtyavg,
+        };
+      });
+
+    res.status(201).json({
+      GCData: {
+        name: "GC",
+        totalStats: gcTotalStats,
+        chartSeries: {
+          enterprise_key: "GC",
+          chartSeries: gcChartSeriesData,
+        },
+      },
+      MFData: {
+        name: "MF",
+        totalStats: mfTotalStats,
+        chartSeries: {
+          enterprise_key: "MF",
+          chartSeries: mfChartSeriesData,
+        },
+      },
+    });
   } catch (error) {
-    res
-    .status(500)
-    .json({  message:error.message });
+    res.status(500).json({ message: error.message });
   }
 };
-
 
 module.exports = {
   getTableData,
@@ -1274,5 +1336,5 @@ module.exports = {
   thresholdInfo,
   getThresholdInfo,
   sendSMS,
-  getSalesAvgData
+  getSalesAvgData,
 };
