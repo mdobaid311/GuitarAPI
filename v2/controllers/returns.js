@@ -158,52 +158,30 @@ const getMileStoneInfo = async(req, res) => {
     }
 };
 
-// const scheduleExportData = async(req, res) => {
-//   const {query, toList } = req.body;
-// //  const query1 = "SELECT * FROM order_book_line limit 100";
-// //  const query2 = "SELECT * FROM order_book_header limit 100";
-// //  const query3 = "SELECT * FROM order_book_taxes limit 100";
-// //'*/1 * * * *'
-// //'0 17 * * *'
-//   cron.schedule('*/1 * * * *', () => {
-//     const query =  `SELECT * FROM configurequeries order by time`;
-//     const result = await client.query(query);
-//     const queries = result.rows;
-//     queries.forEach(list ={
-//       cron.schedule(`0 ${list.time} * * *`, () => {
-//         getExportedData(list.query, list.emails, res);
-//       })
-//     });    
-//   });
-// };
 
 const createScheduledQueriesInfo = async(req, res) =>{
   try {     
-    const {userid, query,  emails, time} = req.body;  
-    const insertQquery = `INSERT INTO schedulequeries (userid, query, emails, time ) VALUES($1, $2,$3, $4)`;
-    const values = [userid, query,  emails, time];
+    const {userid, query, emails, name, day, week, month, subject } = req.body; 
+    // min  hour DayOfMonth  Month  DayOfWeek
+    // `0  7  *  *  *` daily
+    // `0 7 * * 5`  Every week on friday
+    //  `0 7 * * 0,14` bi weekly   every two weeks on Sundays
+    //   `0 7 5 * * ` monthly  On friday of every month
+    //`0  7  5  5  *`  YEARlY on friday of MAY at & AM
+    // let weekS = week || '*';
+    // let dayS = day || '*';
+    // let monthS = month || '*';
+     schedule = `*/5  *  *  *  *`;
+     console.log(schedule); 
+    const insertQquery = `INSERT INTO schedulequeries (userid, query, emails, schedule, name, subject) VALUES($1, $2,$3, $4, $5, $6)`;
+    const values = [userid, query,  emails, schedule, name, subject];
     const result = await client.query(insertQquery, values);
-    res.status(201).json({ message : "Schedule query info created successfully"});       
+    res.status(201).json({ message : "Scheduler info created successfully"});       
 } catch (error) {
   res.status(500).json({ error: error.message });
 }
 };
 
-// const scheduleExportData = async (req, res) => {
-//   const { query, toList , time} = req.body;
-//   // `*/${list.time} * * * *`
-//   cron.schedule(`0 ${list.time} * * *`, async () => {
-//     const query =  `SELECT * FROM schedulequeries order by time`;
-//     const result = await client.query(query);
-//     const queries = result.rows;
-//     console.log(queries);
-//     queries.forEach(list => {
-//       cron.schedule(`*/${list.time} * * * *`, async () => {
-//         await getExportedData(list.query, list.emails, res);
-//       });
-//     });
-//   });
-// };
 
 const scheduleExportData = async (req, res) => {
   const { query, toList , time} = req.body;
@@ -213,7 +191,7 @@ const scheduleExportData = async (req, res) => {
 };
 
 
-const getExportedData = async(query, toList, res) => {
+const getExportedData = async(query, toList, subject, res) => {
     try {
         const result = await client.query(query);
         const data = result.rows;
@@ -222,13 +200,13 @@ const getExportedData = async(query, toList, res) => {
         xlsx.utils.book_append_sheet(workbook, worksheet, 'Sheet 1');
         const excelFilePath = '../excel.xlsx';
         xlsx.writeFile(workbook, excelFilePath);
-        excelExportData(excelFilePath, toList, res);        
+        excelExportData(excelFilePath, toList, subject, res);        
     } catch (error) {
         res.status(500).json({error : error.message});
     }
 };
 
-const excelExportData = async(excelFilePath, toList, res ) => {
+const excelExportData = async(excelFilePath, toList, subject, res ) => {
 
      try {
       const transporter  = nodemailer.createTransport({
@@ -244,7 +222,7 @@ const excelExportData = async(excelFilePath, toList, res ) => {
       const mailOptions = {
         from : 'guitarcenter.xit@gmail.com',
         to: toList,
-        subject : 'Guitar Center Report',
+        subject : subject,
         html:"<p>Hi!<br>Please find attached sales analysis report.<br><br><br><br>Please note.<br>This is a Guitar Center application generated report.<br><br></p>",
         attachments: [
             {
@@ -313,10 +291,8 @@ const excelExportData = async(excelFilePath, toList, res ) => {
 
   const getUserConfigurations = async (req, res) => {
  
-    const id = Number(req.query.userid);
-    console.log(id);
-    const check = `SELECT * FROM users WHERE id = 45`;
-    
+    const id = Number(req.query.id);
+    console.log(id);   
  
     try {
       const query = `
@@ -353,33 +329,45 @@ const excelExportData = async(excelFilePath, toList, res ) => {
     }
   };
 
-  const jobs = [];
-  // console.log(jobs);
-const testSchedule = async (req, res) => {
-  const { mins, hour, day, month, query, name,  toList} = req.body;
-  console.log(hour);
+  
+  cron.schedule(`*/5 17 * * *`, async (req, res) => {
+    const schedulerQuery = `SELECT * FROM schedulequeries`
+    const result = await client.query(schedulerQuery);
+    console.log(result.rows);
+    const schedulers = result.rows;
+    schedulers.forEach(item =>{
+      const callback = async () => {
+        console.log(`Cron Job ${item.name} executed`);
+      await  getExportedData(item.query, item.emails, item.subject, res);
+      };
+      createCronJob(item.schedule, callback);
+    });
+  });
 
-  let minsS = mins || '*';
-  let hourS = hour || '*';
-  let dayS = day || '*';
-  let monthS = month || '*';
-  let schedule = `*/${minsS} ${hourS} ${dayS} ${monthS} *`;
+// const testSchedule = async (req, res) => {
+//   const { mins, hour, day, month, query, name,  toList} = req.body;
+//   console.log(hour);
 
-  console.log(schedule);
-  const callback = () => {
-    console.log(`Cron Job ${name} executed`);
-    getExportedData(query, toList, res);
-  };
-  createCronJob(schedule, callback, name);
-  res.json({ success: true, message: `Cron Job ${name} scheduled` });
-};
+//   let minsS = mins || '*';
+//   let hourS = hour || '*';
+//   let dayS = day || '*';
+//   let monthS = month || '*';
+//   let schedule = `*/${minsS} ${hourS} ${dayS} ${monthS} *`;
 
-const createCronJob = (schedule, callback, name) => {
-  console.log("mahebub");
+//   console.log(schedule);
+//   const callback = () => {
+//     console.log(`Cron Job ${name} executed`);
+//     getExportedData(query, toList, res);
+//   };
+//   createCronJob(schedule, callback, name);
+//   res.json({ success: true, message: `Cron Job ${name} scheduled` });
+// };
+
+const createCronJob = (schedule, callback) => {
   const job = cron.schedule(schedule, callback);
-  jobs.push({ name, job });
   job.start();
-return;
+  // insertScheduledJob();
+  return job;
 };
 
 
@@ -395,5 +383,5 @@ module.exports = {
     createQueriesInfo,
     getUserConfigurations,
     createScheduledQueriesInfo,
-    testSchedule
+    // testSchedule
   };

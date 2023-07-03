@@ -1027,13 +1027,14 @@ const getDataForTimeSeries = async (req, res) => {
     msTwo = msTwo.toISOString().split("T")[0];
     msThree = msThree.toISOString().split("T")[0];
     msFour = msFour.toISOString().split("T")[0];
-    const query = `SELECT gettimeseriesdataupdated('${orderDate}','${msOne}','${msTwo}','${msThree}','${msFour}','Ref1', 'Ref2','Ref3', 'Ref4','Ref5','Ref6');
+    const query = `SELECT gettimeseriesdataupdated('${orderDate}','${msOne}','${msTwo}','${msThree}','${msFour}','Ref1', 'Ref2','Ref3', 'Ref4','Ref5','Ref6','Ref7');
     FETCH ALL IN "Ref1";
     FETCH ALL IN "Ref2";
     FETCH ALL IN "Ref3";
     FETCH ALL IN "Ref4";
     FETCH ALL IN "Ref5";
     FETCH ALL IN "Ref6";
+    FETCH ALL IN "Ref7";
    `;
     timeLineDates.push(
       { date: msOne, milestone: userMilestones[0] },
@@ -1052,7 +1053,8 @@ const getDataForTimeSeries = async (req, res) => {
         const fourthTimeLineData = result[4].rows;
         const fifthTimeLineData = result[5].rows;
         const sixthTimeLineData = result[6].rows;
-
+        const totalQtySum = result[7].rows;
+        
         const mergedData = firstTimeLineData.map((first) => {
           const status_name = first.status_name;
           let lastDate = 0;
@@ -1112,7 +1114,7 @@ const getDataForTimeSeries = async (req, res) => {
           };
         });
 
-        res.status(200).json({ timeLineDates, mergedData, userMilestones });
+        res.status(200).json({ timeLineDates, mergedData, totalQtySum : parseInt(totalQtySum[0].qtysum), userMilestones });
       }
     });
   } catch (error) {

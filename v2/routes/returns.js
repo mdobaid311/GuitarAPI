@@ -10,7 +10,7 @@ const {
     createStatusInfo,
     createQueriesInfo,
     createScheduledQueriesInfo,
-    testSchedule
+    // testSchedule
 } = require("../controllers/returns");
 
 const router = express.Router();
@@ -24,6 +24,6 @@ router.post("/createStatusInfo", createStatusInfo);
 router.post("/createQueriesInfo", createQueriesInfo);
 router.post("/createScheduledQueriesInfo", createScheduledQueriesInfo);
 router.get("/getUserConfigurations", getUserConfigurations);
-router.post("/testSchedule", testSchedule);
+// router.post("/testSchedule", testSchedule);
 
 module.exports = router;
