@@ -41,14 +41,11 @@ const getCustomQueryDate = (req, res) => {
   });
 };
 const getFullSalesData = (req, res) => {
-  // if (client.connection._events != null) {
-  //   client.end();
-  //   client.connect();
-  // }
-
   const start_date = req.query.start_date;
   const end_date = req.query.end_date;
   const intervaltime = req.query.intervaltime;
+
+  
 
   // 2022-11-17 22:12
   const start_date_formatted = moment(start_date, "YYYY-MM-DD HH:mm").format(
@@ -1004,8 +1001,7 @@ const getDataForTimeSeries = async (req, res) => {
     }
 
     const userMilestones = Object.values(mileStoneResult.rows[0]).slice(1, 6);
-    console.log(userMilestones);
-    const originalDate = new Date(orderDate);
+     const originalDate = new Date(orderDate);
     let msOne = new Date(originalDate);
     let msTwo = new Date(originalDate);
     let msThree = new Date(originalDate);
