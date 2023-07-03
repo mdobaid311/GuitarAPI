@@ -416,10 +416,16 @@ const getTopItems = async (req, res) => {
 
 const getSalesAverage = async (req, res) => {
   const fulldate = req.query.date;
+  let interval = req.query.interval;
 
   const extractDay = fulldate.split("-")[2];
-  console.log(fulldate, extractDay);
-  const query = `SELECT enterprise_key,CAST(date_hour AS TIME) AS time_only,avg(total_sum_by_day) as final_total from (
+  if (!interval){
+    interval = "hourly";
+  }
+  
+  let query;
+  if (interval === "hourly") {
+    query = `SELECT enterprise_key,CAST(date_hour AS TIME) AS time_only,avg(total_sum_by_day) as final_total from (
   SELECT
       enterprise_key,
       date_hour,
@@ -445,6 +451,53 @@ const getSalesAverage = async (req, res) => {
       enterprise_key ) as subquery_2 
     group by enterprise_key, time_only;
     `;
+  }
+
+  else if (interval === "daily") {
+    query = `
+    SELECT enterprise_key, CAST(date_hour AS DATE) AS date_only, avg(final_total_by_day) AS final_total
+FROM (
+    SELECT enterprise_key, date_hour, SUM(total_sum) AS final_total_by_day
+    FROM (
+        SELECT enterprise_key, DATE_TRUNC('day', order_date_parsed) AS date_hour, SUM(original_order_total_amount) AS total_sum
+        FROM order_book_line
+        WHERE EXTRACT(MONTH FROM order_date_parsed) = ${extractDay}
+        GROUP BY DATE_TRUNC('day', order_date_parsed), enterprise_key
+    ) AS subquery
+    GROUP BY date_hour, enterprise_key
+) AS subquery_2
+GROUP BY enterprise_key, date_only
+ORDER BY date_only;
+`;
+  } else if( interval === "quarter-hour") {
+    query = `
+    SELECT enterprise_key,CAST(date_hour AS TIME) AS time_only,avg(total_sum_by_day) as final_total from (
+      SELECT
+          enterprise_key,
+          date_hour,
+          SUM(total_sum) AS total_sum_by_day
+      FROM (
+          SELECT
+              enterprise_key,
+              date_trunc('hour', order_date_parsed) + 
+        (date_part('minute', order_date_parsed)::int / 15) * interval '15 minutes' AS date_hour,
+              SUM(original_order_total_amount) AS total_sum
+          FROM
+              order_book_line
+        WHERE
+          EXTRACT(DAY FROM order_date_parsed) = ${extractDay}
+          GROUP BY
+              date_hour,
+              enterprise_key
+          ORDER BY
+              date_hour
+      
+      ) AS subquery
+      GROUP BY
+          date_hour,
+          enterprise_key ) as subquery_2 
+        group by enterprise_key, time_only;`
+  }
 
   try {
     const result = await client.query(query);

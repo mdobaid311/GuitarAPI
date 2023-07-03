@@ -972,7 +972,7 @@ const getCityData = async (req, res) => {
 
   console.log();
 
-  const query = `select TRIM(ship_to_city) as city,sum(original_order_total_amount) as original_order_total_amount  from order_book_line where  TRIM(ship_to_state) ='${city}' group by ship_to_city ;`;
+  const query = `select TRIM(ship_to_city) as city,sum(original_order_total_amount) as original_order_total_amount,sum(line_ordered_qty) as line_ordered_qty  from order_book_line where  TRIM(ship_to_state) ='${city}' group by ship_to_city ;`;
   console.log(query);
   try {
     client.query(query, (err, result) => {
