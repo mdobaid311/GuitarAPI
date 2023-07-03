@@ -168,10 +168,10 @@ const createScheduledQueriesInfo = async(req, res) =>{
     //  `0 7 * * 0,14` bi weekly   every two weeks on Sundays
     //   `0 7 5 * * ` monthly  On friday of every month
     //`0  7  5  5  *`  YEARlY on friday of MAY at & AM
-    let weekS = week || '*';
-    let dayS = day || '*';
-    let monthS = month || '*';
-     schedule = `0  7  ${dayS}  ${monthS}  ${weekS}`;
+    // let weekS = week || '*';
+    // let dayS = day || '*';
+    // let monthS = month || '*';
+     schedule = `*/5  *  *  *  *`;
      console.log(schedule); 
     const insertQquery = `INSERT INTO schedulequeries (userid, query, emails, schedule, name, subject) VALUES($1, $2,$3, $4, $5, $6)`;
     const values = [userid, query,  emails, schedule, name, subject];
@@ -344,28 +344,29 @@ const excelExportData = async(excelFilePath, toList, subject, res ) => {
     });
   });
 
-const testSchedule = async (req, res) => {
-  const { mins, hour, day, month, query, name,  toList} = req.body;
-  console.log(hour);
+// const testSchedule = async (req, res) => {
+//   const { mins, hour, day, month, query, name,  toList} = req.body;
+//   console.log(hour);
 
-  let minsS = mins || '*';
-  let hourS = hour || '*';
-  let dayS = day || '*';
-  let monthS = month || '*';
-  let schedule = `*/${minsS} ${hourS} ${dayS} ${monthS} *`;
+//   let minsS = mins || '*';
+//   let hourS = hour || '*';
+//   let dayS = day || '*';
+//   let monthS = month || '*';
+//   let schedule = `*/${minsS} ${hourS} ${dayS} ${monthS} *`;
 
-  console.log(schedule);
-  const callback = () => {
-    console.log(`Cron Job ${name} executed`);
-    getExportedData(query, toList, res);
-  };
-  createCronJob(schedule, callback, name);
-  res.json({ success: true, message: `Cron Job ${name} scheduled` });
-};
+//   console.log(schedule);
+//   const callback = () => {
+//     console.log(`Cron Job ${name} executed`);
+//     getExportedData(query, toList, res);
+//   };
+//   createCronJob(schedule, callback, name);
+//   res.json({ success: true, message: `Cron Job ${name} scheduled` });
+// };
 
 const createCronJob = (schedule, callback) => {
   const job = cron.schedule(schedule, callback);
   job.start();
+  // insertScheduledJob();
   return job;
 };
 
@@ -382,5 +383,5 @@ module.exports = {
     createQueriesInfo,
     getUserConfigurations,
     createScheduledQueriesInfo,
-    testSchedule
+    // testSchedule
   };
