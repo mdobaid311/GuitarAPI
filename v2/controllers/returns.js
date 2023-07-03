@@ -171,6 +171,7 @@ const createScheduledQueriesInfo = async(req, res) =>{
     // let weekS = week || '*';
     // let dayS = day || '*';
     // let monthS = month || '*';
+    //  schedule = `*/5  ${dayS}  ${monthS}  *  ${weekS}`;
      schedule = `*/5  *  *  *  *`;
      console.log(schedule); 
     const insertQquery = `INSERT INTO schedulequeries (userid, query, emails, schedule, name, subject) VALUES($1, $2,$3, $4, $5, $6)`;
@@ -329,46 +330,72 @@ const excelExportData = async(excelFilePath, toList, subject, res ) => {
     }
   };
 
-  
-  cron.schedule(`*/5 17 * * *`, async (req, res) => {
-    const schedulerQuery = `SELECT * FROM schedulequeries`
-    const result = await client.query(schedulerQuery);
-    console.log(result.rows);
-    const schedulers = result.rows;
-    schedulers.forEach(item =>{
+
+const scheduledJobs = new Set();
+
+// Function to check if a job is locked
+const isJobLocked = async (jobName) => {
+  const selectQuery = 'SELECT locked FROM job_locks WHERE job_name = $1';
+  const result = await client.query(selectQuery, [jobName]);
+  if (result.rows.length === 0) {
+    return false;
+  }
+  return result.rows[0].locked;
+};
+
+// Function to lock a job
+const lockJob = async (jobName) => {
+  const updateQuery = 'UPDATE job_locks SET locked = TRUE WHERE job_name = $1';
+  await client.query(updateQuery, [jobName]);
+};
+
+// Function to unlock a job
+const unlockJob = async (jobName) => {
+  const updateQuery = 'UPDATE job_locks SET locked = FALSE WHERE job_name = $1';
+  await client.query(updateQuery, [jobName]);
+  return;
+};
+
+// Function to insert a job lock into the database
+const insertJobLock = async (jobName) => {
+  const insertQuery = 'INSERT INTO job_locks (job_name, locked) VALUES ($1, FALSE) ON CONFLICT (job_name) DO UPDATE SET locked = FALSE';
+  await client.query(insertQuery, [jobName]);
+};
+
+
+cron.schedule('*/5 * * * *', async (req, res) => {
+  const schedulerQuery = 'SELECT * FROM schedulequeries';
+  const result = await client.query(schedulerQuery);
+  // console.log(result.rows);
+  const schedulers = result.rows;
+
+  schedulers.forEach(async (item) => {
+    if (!scheduledJobs.has(item.name) && !(await isJobLocked(item.name))) {
+      // Lock the job to prevent concurrent execution
+      await lockJob(item.name);
+
       const callback = async () => {
         console.log(`Cron Job ${item.name} executed`);
-      await  getExportedData(item.query, item.emails, item.subject, res);
+        await getExportedData(item.query, item.emails, item.subject, res);
+        // Unlock the job after execution
+        await unlockJob(item.name);
       };
-      createCronJob(item.schedule, callback);
-    });
+      // const job = 
+      createCronJob(item.schedule, callback, item.name);
+      // return job;
+    }
   });
+});
 
-// const testSchedule = async (req, res) => {
-//   const { mins, hour, day, month, query, name,  toList} = req.body;
-//   console.log(hour);
-
-//   let minsS = mins || '*';
-//   let hourS = hour || '*';
-//   let dayS = day || '*';
-//   let monthS = month || '*';
-//   let schedule = `*/${minsS} ${hourS} ${dayS} ${monthS} *`;
-
-//   console.log(schedule);
-//   const callback = () => {
-//     console.log(`Cron Job ${name} executed`);
-//     getExportedData(query, toList, res);
-//   };
-//   createCronJob(schedule, callback, name);
-//   res.json({ success: true, message: `Cron Job ${name} scheduled` });
-// };
-
-const createCronJob = (schedule, callback) => {
+const createCronJob = (schedule, callback, name) => {
   const job = cron.schedule(schedule, callback);
   job.start();
-  // insertScheduledJob();
+  scheduledJobs.add(name);
+  insertJobLock(name);
   return job;
 };
+
+
 
 
   
@@ -382,6 +409,5 @@ module.exports = {
     createStatusInfo,
     createQueriesInfo,
     getUserConfigurations,
-    createScheduledQueriesInfo,
-    // testSchedule
+    createScheduledQueriesInfo
   };
