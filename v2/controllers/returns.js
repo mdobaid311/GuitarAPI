@@ -177,7 +177,7 @@ const createScheduledQueriesInfo = async(req, res) =>{
     if(!week && !day && !month) {
       schedule = `*/5  *  *  *  *`;
     }else {
-      schedule = `35  ${dayS}  ${monthS}  *  ${weekS}`;
+      schedule = `1  ${dayS}  ${monthS}  *  ${weekS}`;
     }
      
     //  schedule = `*/5  *  *  *  *`;
