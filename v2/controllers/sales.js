@@ -414,9 +414,130 @@ const getTopItems = async (req, res) => {
   }
 };
 
+const getSalesAverage = async (req, res) => {
+  const fulldate = req.query.date;
+  let interval = req.query.interval;
+
+  const extractDay = fulldate.split("-")[2];
+  if (!interval){
+    interval = "hourly";
+  }
+  
+  let query;
+  if (interval === "hourly") {
+    query = `SELECT enterprise_key,CAST(date_hour AS TIME) AS time_only,avg(total_sum_by_day) as final_total from (
+  SELECT
+      enterprise_key,
+      date_hour,
+      SUM(total_sum) AS total_sum_by_day
+  FROM (
+      SELECT
+          enterprise_key,
+          DATE_TRUNC('hour', order_date_parsed) AS date_hour,
+          SUM(original_order_total_amount) AS total_sum
+      FROM
+          order_book_line
+    WHERE
+      EXTRACT(DAY FROM order_date_parsed) = ${extractDay}
+      GROUP BY
+          DATE_TRUNC('hour', order_date_parsed),
+          enterprise_key
+      ORDER BY
+          date_hour
+  
+  ) AS subquery
+  GROUP BY
+      date_hour,
+      enterprise_key ) as subquery_2 
+    group by enterprise_key, time_only;
+    `;
+  }
+
+  else if (interval === "daily") {
+    query = `
+    SELECT enterprise_key, CAST(date_hour AS DATE) AS date_only, avg(final_total_by_day) AS final_total
+FROM (
+    SELECT enterprise_key, date_hour, SUM(total_sum) AS final_total_by_day
+    FROM (
+        SELECT enterprise_key, DATE_TRUNC('day', order_date_parsed) AS date_hour, SUM(original_order_total_amount) AS total_sum
+        FROM order_book_line
+        WHERE EXTRACT(MONTH FROM order_date_parsed) = ${extractDay}
+        GROUP BY DATE_TRUNC('day', order_date_parsed), enterprise_key
+    ) AS subquery
+    GROUP BY date_hour, enterprise_key
+) AS subquery_2
+GROUP BY enterprise_key, date_only
+ORDER BY date_only;
+`;
+  } else if( interval === "quarter-hour") {
+    query = `
+    SELECT enterprise_key,CAST(date_hour AS TIME) AS time_only,avg(total_sum_by_day) as final_total from (
+      SELECT
+          enterprise_key,
+          date_hour,
+          SUM(total_sum) AS total_sum_by_day
+      FROM (
+          SELECT
+              enterprise_key,
+              date_trunc('hour', order_date_parsed) + 
+        (date_part('minute', order_date_parsed)::int / 15) * interval '15 minutes' AS date_hour,
+              SUM(original_order_total_amount) AS total_sum
+          FROM
+              order_book_line
+        WHERE
+          EXTRACT(DAY FROM order_date_parsed) = ${extractDay}
+          GROUP BY
+              date_hour,
+              enterprise_key
+          ORDER BY
+              date_hour
+      
+      ) AS subquery
+      GROUP BY
+          date_hour,
+          enterprise_key ) as subquery_2 
+        group by enterprise_key, time_only;`
+  }
+
+  try {
+    const result = await client.query(query);
+
+    const series = result.rows.reduce((result, item) => {
+      if (!result[item.enterprise_key]) {
+        result[item.enterprise_key] = [];
+      }
+
+      result[item.enterprise_key].push({
+        enterprise_key: item.enterprise_key,
+        datetime: moment(fulldate + " " + item.time_only).format(
+          "MMM-DD HH:mm"
+        ),
+        // get two decimal places
+        original_order_total_amount: Math.round(item.final_total * 100) / 100,
+      });
+      return result;
+    }, {});
+
+    const totals = result.rows.reduce((result, item) => {
+      if (!result[item.enterprise_key]) {
+        result[item.enterprise_key] = 0;
+      }
+
+      result[item.enterprise_key] += +item.final_total;
+      return result;
+    }, {});
+
+    res.status(200).send({ total: totals, series: series });
+  } catch (error) {
+    console.log(error);
+    res.status(400).send(error);
+  }
+};
+
 module.exports = {
   getChartData,
   getTotalStats,
   getSalesCategories,
   getTopItems,
+  getSalesAverage,
 };
