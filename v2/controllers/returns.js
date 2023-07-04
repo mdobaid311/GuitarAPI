@@ -3,6 +3,8 @@ const fs = require('fs');
 const xlsx = require('xlsx');
 const nodemailer = require("nodemailer");
 const cron = require('node-cron');
+const moment = require('moment-timezone');
+const { log } = require("async");
 
 const getReturnsData = async(req, res) =>{
     const startDate = req.query.startDate;
@@ -161,36 +163,33 @@ const getMileStoneInfo = async(req, res) => {
 
 const createScheduledQueriesInfo = async(req, res) =>{
   try {     
-    const {userid, query, emails, name, day, week, month, subject } = req.body; 
+    const {userid, query, emails, name, day, week, month, subject, timezone } = req.body; 
     // min  hour DayOfMonth  Month  DayOfWeek
     // `0  7  *  *  *` daily
     // `0 7 * * 5`  Every week on friday
     //  `0 7 * * 0,14` bi weekly   every two weeks on Sundays
     //   `0 7 5 * * ` monthly  On friday of every month
     //`0  7  5  5  *`  YEARlY on friday of MAY at & AM
-    // let weekS = week || '*';
-    // let dayS = day || '*';
-    // let monthS = month || '*';
-    //  schedule = `*/5  ${dayS}  ${monthS}  *  ${weekS}`;
-     schedule = `*/5  *  *  *  *`;
+    let weekS = week || '*';
+    let dayS = day || '*';
+    let monthS = month || '*';
+    console.log(week, month, day);
+    if(!week && !day && !month) {
+      schedule = `*/5  *  *  *  *`;
+    }else {
+      schedule = `35  ${dayS}  ${monthS}  *  ${weekS}`;
+    }
+     
+    //  schedule = `*/5  *  *  *  *`;
      console.log(schedule); 
-    const insertQquery = `INSERT INTO schedulequeries (userid, query, emails, schedule, name, subject) VALUES($1, $2,$3, $4, $5, $6)`;
-    const values = [userid, query,  emails, schedule, name, subject];
+    const insertQquery = `INSERT INTO schedulequeries (userid, query, emails, schedule, name, subject, timezone) VALUES($1, $2,$3, $4, $5, $6, $7)`;
+    const values = [userid, query,  emails, schedule, name, subject, timezone];
     const result = await client.query(insertQquery, values);
     res.status(201).json({ message : "Scheduler info created successfully"});       
 } catch (error) {
   res.status(500).json({ error: error.message });
 }
 };
-
-
-const scheduleExportData = async (req, res) => {
-  const { query, toList , time} = req.body;
-  cron.schedule(`0 ${time} * * *`, async () => {
-    getExportedData(query, toList, res);
-  });
-};
-
 
 const getExportedData = async(query, toList, subject, res) => {
     try {
@@ -366,29 +365,33 @@ const insertJobLock = async (jobName) => {
 cron.schedule('*/5 * * * *', async (req, res) => {
   const schedulerQuery = 'SELECT * FROM schedulequeries';
   const result = await client.query(schedulerQuery);
-  // console.log(result.rows);
+  console.log(result.rows);
   const schedulers = result.rows;
 
   schedulers.forEach(async (item) => {
-    if (!scheduledJobs.has(item.name) && !(await isJobLocked(item.name))) {
+    const { name, query, emails, subject, schedule, timezone } = item;
+    if (!scheduledJobs.has(name) && !(await isJobLocked(name))) {
       // Lock the job to prevent concurrent execution
-      await lockJob(item.name);
+      await lockJob(name);
 
       const callback = async () => {
-        console.log(`Cron Job ${item.name} executed`);
-        await getExportedData(item.query, item.emails, item.subject, res);
+        console.log(`Cron job ${name} executed`);
+        await getExportedData(query, emails, subject, res);
         // Unlock the job after execution
-        await unlockJob(item.name);
+        await unlockJob(name);
       };
       // const job = 
-      createCronJob(item.schedule, callback, item.name);
+      createCronJob(schedule, callback, timezone, name);
       // return job;
     }
   });
 });
 
-const createCronJob = (schedule, callback, name) => {
-  const job = cron.schedule(schedule, callback);
+const createCronJob = (schedule, callback,timeZone, name) => {
+  const job = cron.schedule(schedule, callback, {
+    scheduled: true,
+    timezone: timeZone,
+  });
   job.start();
   scheduledJobs.add(name);
   insertJobLock(name);
@@ -396,15 +399,10 @@ const createCronJob = (schedule, callback, name) => {
 };
 
 
-
-
-  
-
 module.exports = {
     getReturnsData,
     mileStoneInfo,
     getMileStoneInfo,
-    scheduleExportData,
     createWidgetsInfo,
     createStatusInfo,
     createQueriesInfo,
