@@ -987,19 +987,20 @@ const getDataForTimeSeries = async (req, res) => {
   const orderDate = req.query.date;
   const userid = [Number(req.query.userid)];
 
+  console.log(userid)
   try {
     const timeLineDates = [];
     const mileStoneQuery = `SELECT * FROM configuremilestone WHERE userid=$1`;
     let mileStoneResult = await client.query(mileStoneQuery, userid);
-
     if (mileStoneResult.rows.length < 1) {
       const insertQuery = `INSERT INTO configuremilestone (userid, msone, mstwo,msthree, msfour, msfive, mssix) VALUES($1, $2, $3,$4,$5,$6,$7)`;
       const insertValues = [+userid, 5, 10, 15, 20, 25, 30];
       const insertResult = await client.query(insertQuery, insertValues);
 
       mileStoneResult = await client.query(mileStoneQuery, userid);
+      
     }
-
+    
     const userMilestones = Object.values(mileStoneResult.rows[0]).slice(1, 6);
      const originalDate = new Date(orderDate);
     let msOne = new Date(originalDate);
@@ -1044,6 +1045,8 @@ const getDataForTimeSeries = async (req, res) => {
     );
 
     client.query(query, (err, result) => {
+      console.log(err)
+
       if (err) {
         return res.status(500).send(err);
       } else {
@@ -1103,7 +1106,6 @@ const getDataForTimeSeries = async (req, res) => {
 
           const QtySumTotal = QtySum.reduce((a, b) => a + b, 0);
           const lineTotalSumTotal = lineTotalSum.reduce((a, b) => a + b, 0);
-
           return {
             status_name,
             QtySumTotal,
@@ -1113,6 +1115,7 @@ const getDataForTimeSeries = async (req, res) => {
             lineTotalSum,
           };
         });
+
 
         res.status(200).json({ timeLineDates, mergedData, totalQtySum : parseInt(totalQtySum[0].qtysum), userMilestones });
       }
