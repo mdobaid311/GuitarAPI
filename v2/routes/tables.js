@@ -15,7 +15,7 @@ const {
   getDataForTimeSeries,
   thresholdInfo,
   getThresholdInfo,
-  sendSMS,
+  createScheduledSMSInfo,
   getSalesAvgData
 } = require("../controllers/tables");
 
@@ -35,7 +35,7 @@ router.get("/getCityData", getCityData);
 router.get("/getDataForTimeSeries", getDataForTimeSeries);
 router.get("/getThresholdInfo", getThresholdInfo);
 router.post("/thresholdInfo", thresholdInfo);
-router.post("/sendSMS", sendSMS);
+router.post("/createScheduledSMSInfo", createScheduledSMSInfo);
 router.get("/getSalesAvgData", getSalesAvgData);
 
 module.exports = router;
