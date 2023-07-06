@@ -240,7 +240,7 @@ const excelExportData = async(excelFilePath, toList, subject, res ) => {
             res.status(201).json({ message: "Data Exported successfully" });
         }
         fs.unlinkSync(excelFilePath);
-        client.release();
+        // client.release();
       });
   
     } catch (error) {
