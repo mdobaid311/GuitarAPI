@@ -1,6 +1,7 @@
 const client = require("../config/postgre_client");
 const moment = require("moment");
 const bcrypt = require("bcrypt");
+const cron = require('node-cron');
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 const accountSid = process.env.ACCOUNT_SID;
@@ -1193,37 +1194,153 @@ const getThresholdInfo = async (req, res) => {
   }
 };
 
-const sendSMS = async (req, res) => {
+const createScheduledSMSInfo = async(req, res) =>{
   try {
-    const { toNum, salesVal } = req.body;
-    const phoneNumbers = toNum.split(",");
-
-    for (const phoneNumber of phoneNumbers) {
-      let message =
-        salesVal < 100000
-          ? "Sales total is less than threshold"
-          : salesVal > 1000000
-          ? "Sales total is greater than threshold"
-          : "";
-
-      const response = await twilioClient.messages.create({
-        body: message,
-        from: twilioNum,
-        to: phoneNumber.trim(),
-      });
-
-      console.log(`SMS sent to ${phoneNumber}: ${response.sid}`);
-    }
-    res.status(200).json({ success: true, message: "SMS sent successfully" });
+    const { userid, columnName, condition, value, alertName, alertText, sendEmail, sendSMS } = req.body;
+    const query = `INSERT INTO createscheduledsmsinfo(userid, columnname, condition, value, alertname, alerttext, sendemail, sendsms) VALUES($1,$2,$3,$4,$5,$6,$7,$8)`;
+    const values = [userid, columnName, condition, value, alertName, alertText, sendEmail, sendSMS]
+    const result = await client.query(query, values);
+    res.status(201).json({ message : "sms info created successfully"}); 
   } catch (error) {
-    console.error("Error sending SMS:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to send SMS",
-      error: error.message,
-    });
+    res.status(500).json({ error: error.message });
   }
 };
+
+// cron.schedule('*/5 * * * *', async (req, res) => {
+//   try {
+//     // const { toNum, originalOrderTotalAmount, alertName, alertText } = req.body;
+//     // const phoneNumbers = toNum.split(",");
+
+//     const lineQuery = `SELECT SUM(original_order_total_amount) AS totalsales,  SUM(original_ordered_qty) AS totalqty from  order_book_line `;
+//     const lineResult = await client.query(lineQuery);
+//     const totalSales = lineResult.rows[0].totalsales;
+//     const totalQty = lineResult.rows[0].totalqty;
+//     console.log(totalSales, totalQty);
+//     const smsQuery = `SELECT * FROM createscheduledsmsinfo`;
+//     const result = await client.query(smsQuery);
+//     const scheduledsms = result.rows;
+//     console.log(scheduledsms);
+//     scheduledsms.forEach(async (sms) => {
+//        // for (const phoneNumber of phoneNumbers) {
+//         if(sms.columnname ==='original_order_total_amount'){
+//           if(sms.condition ==='gt'){
+//             if(sms.value > totalSales) {
+//               const response = await twilioClient.messages.create({
+//                 body: sms.alerttext +`: given ${sms.value} is greater than total sales `,
+//                 from: twilioNum,
+//                 // to: phoneNumber.trim(),
+//                 to : "+918142698360"
+//               });
+//             }else{
+//               const response = await twilioClient.messages.create({
+//                 body: sms.alerttext +`: given ${sms.value} is less than total sales `,
+//                 from: twilioNum,
+//                 to : "+918142698360"
+//               });
+//             }
+//           }else{
+//             if(sms.value < totalSales) {
+//               const response = await twilioClient.messages.create({
+//                 body: sms.alerttext +`: given ${sms.value} is less than total sales `,
+//                 from: twilioNum,
+//                 to : "+918142698360"
+//               });
+//             }else{
+//               const response = await twilioClient.messages.create({
+//                 body: sms.alerttext +`: given ${sms.value} is greater than total sales`,
+//                 from: twilioNum,
+//                 to : "+918142698360"
+//               });
+//             }
+//           }
+//         }else{
+//           if(sms.condition ==='gt'){
+//             if(sms.value > totalQty) {
+//               const response = await twilioClient.messages.create({
+//                 body: sms.alerttext +`: given ${sms.value} is greater than total quantity `,
+//                 from: twilioNum,
+//                 // to: phoneNumber.trim(),
+//                 to : "+918142698360"
+//               });
+//             }else{
+//               const response = await twilioClient.messages.create({
+//                 body: sms.alerttext +`: given ${sms.value} is less than total quantity `,
+//                 from: twilioNum,
+//                 to : "+918142698360"
+//               });
+//             }
+//           }else{
+//             if(sms.value < totalQty) {
+//               const response = await twilioClient.messages.create({
+//                 body: sms.alerttext +`: given ${sms.value} is less than total quantity `,
+//                 from: twilioNum,
+//                 to : "+918142698360"
+//               });
+//             }else{
+//               const response = await twilioClient.messages.create({
+//                 body: sms.alerttext +`: given ${sms.value} is greater than total quantity `,
+//                 from: twilioNum,
+//                 to : "+918142698360"
+//               });
+//             }
+//           }
+//         }
+//       //  console.log(`SMS sent to ${phoneNumber}: ${response.sid}`);
+//       // }
+//       // res.status(200).json({ success: true, message: "SMS sent successfully" });
+//     });
+//   } catch (error) {
+//     console.error("Error sending SMS:", error);
+//     // res.status(500).json({
+//     //   success: false,
+//     //   message: "Failed to send SMS",
+//     //   error: error.message,
+//     // });
+//   }
+// });
+
+cron.schedule('*/5 * * * *', async () => {
+  try {
+    const lineQuery = `SELECT SUM(original_order_total_amount) AS totalsales, SUM(original_ordered_qty) AS totalqty from order_book_line`;
+    const lineResult = await client.query(lineQuery);
+    const totalSales = lineResult.rows[0].totalsales;
+    const totalQty = lineResult.rows[0].totalqty;
+    // console.log(totalSales, totalQty);
+
+    const smsQuery = `SELECT * FROM createscheduledsmsinfo`;
+    const result = await client.query(smsQuery);
+    const scheduledsms = result.rows;
+    // console.log(scheduledsms);
+
+    for (const sms of scheduledsms) {
+      let body;
+      if (sms.columnname === 'original_order_total_amount') {
+        if (sms.condition === 'gt') {
+          body = `${sms.alerttext}: given ${sms.value} is ${sms.value > totalSales ? 'greater' : 'less'} than total sales`;
+        } else {
+          body = `${sms.alerttext}: given ${sms.value} is ${sms.value < totalSales ? 'less' : 'greater'} than total sales`;
+        }
+      } else {
+        if (sms.condition === 'gt') {
+          body = `${sms.alerttext}: given ${sms.value} is ${sms.value > totalQty ? 'greater' : 'less'} than total quantity`;
+        } else {
+          body = `${sms.alerttext}: given ${sms.value} is ${sms.value < totalQty ? 'less' : 'greater'} than total quantity`;
+        }
+      }
+
+      const response = await twilioClient.messages.create({
+        body,
+        from: twilioNum,
+        to: '',
+      });
+
+      // console.log(`SMS sent to +918142698360: ${response.sid}`);
+    }
+  } catch (error) {
+    console.error('Error sending SMS:', error);
+  }
+});
+
 
 const getSalesAvgData = async (req, res) => {
   try {
@@ -1348,6 +1465,6 @@ module.exports = {
   getDataForTimeSeries,
   thresholdInfo,
   getThresholdInfo,
-  sendSMS,
+  createScheduledSMSInfo,
   getSalesAvgData,
 };
