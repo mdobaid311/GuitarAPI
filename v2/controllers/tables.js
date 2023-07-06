@@ -1331,7 +1331,7 @@ cron.schedule('*/5 * * * *', async () => {
       const response = await twilioClient.messages.create({
         body,
         from: twilioNum,
-        to: '+918142698360',
+        to: '',
       });
 
       // console.log(`SMS sent to +918142698360: ${response.sid}`);
