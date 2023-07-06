@@ -1028,7 +1028,7 @@ const getDataForTimeSeries = async (req, res) => {
     msTwo = msTwo.toISOString().split("T")[0];
     msThree = msThree.toISOString().split("T")[0];
     msFour = msFour.toISOString().split("T")[0];
-    const query = `SELECT gettimeseriesdataupdated('${orderDate}','${msOne}','${msTwo}','${msThree}','${msFour}','Ref1', 'Ref2','Ref3', 'Ref4','Ref5','Ref6','Ref7');
+    const query = `SELECT gettimeseriesdataupdated('${orderDate}','${msOne}','${msTwo}','${msThree}','${msFour}','Ref1', 'Ref2','Ref3', 'Ref4','Ref5','Ref6','Ref7','Ref8');
     FETCH ALL IN "Ref1";
     FETCH ALL IN "Ref2";
     FETCH ALL IN "Ref3";
@@ -1036,6 +1036,7 @@ const getDataForTimeSeries = async (req, res) => {
     FETCH ALL IN "Ref5";
     FETCH ALL IN "Ref6";
     FETCH ALL IN "Ref7";
+    FETCH ALL IN "Ref8";
    `;
     timeLineDates.push(
       { date: msOne, milestone: userMilestones[0] },
@@ -1057,10 +1058,13 @@ const getDataForTimeSeries = async (req, res) => {
         const fifthTimeLineData = result[5].rows;
         const sixthTimeLineData = result[6].rows;
         const totalQtySum = result[7].rows;
+        const milestonesQtySum = result[8].rows;
         
         const mergedData = firstTimeLineData.map((first) => {
           const status_name = first.status_name;
           let lastDate = 0;
+          let QtySumTotal = 0;
+          let lineTotalSumTotal = 0;
           const QtySum = [];
           const lineTotalSum = [];
 
@@ -1070,33 +1074,40 @@ const getDataForTimeSeries = async (req, res) => {
                 if (first.status_name === third.status_name) {
                   fourthTimeLineData.forEach((fourth) => {
                     if (first.status_name === fourth.status_name) {
-                      fifthTimeLineData.forEach((fifth) => {
-                        if (first.status_name === fifth.status_name) {
-                          const sixth = sixthTimeLineData.find(
-                            (item) => item.status_name === first.status_name
-                          );
-                          if (sixth) {
-                            QtySum.push(
-                              parseInt(first.qtysum),
-                              parseInt(second.qtysum),
-                              parseInt(third.qtysum),
-                              parseInt(fourth.qtysum),
-                              parseInt(fifth.qtysum)
-                            );
+                      milestonesQtySum.forEach((mileStoneSum) => {
+                        if (first.status_name === mileStoneSum.status_name) {
+                          fifthTimeLineData.forEach((fifth) => {
+                            if (first.status_name === fifth.status_name) {
+                              const sixth = sixthTimeLineData.find(
+                                (item) => item.status_name === first.status_name
+                              );
+                              if (sixth) {
+                                QtySum.push(
+                                  parseInt(first.qtysum),
+                                  parseInt(second.qtysum),
+                                  parseInt(third.qtysum),
+                                  parseInt(fourth.qtysum),
+                                  parseInt(fifth.qtysum)
+                                );
 
-                            lineTotalSum.push(
-                              parseInt(first.linetotalsum),
-                              parseInt(second.linetotalsum),
-                              parseInt(third.linetotalsum),
-                              parseInt(fourth.linetotalsum),
-                              parseInt(fifth.linetotalsum)
-                            );
-                            lastDate = sixth.maxdate
-                              .toISOString()
-                              .split("T")[0];
-                          }
-                        }
-                      });
+                                lineTotalSum.push(
+                                  parseInt(first.linetotalsum),
+                                  parseInt(second.linetotalsum),
+                                  parseInt(third.linetotalsum),
+                                  parseInt(fourth.linetotalsum),
+                                  parseInt(fifth.linetotalsum)
+                                );
+                                lastDate = sixth.maxdate
+                                  .toISOString()
+                                  .split("T")[0];
+                                
+                                  QtySumTotal = parseInt(mileStoneSum.qtysum);
+                                  lineTotalSumTotal = parseInt(mileStoneSum.linetotalsum);
+                              }
+                            }                        
+                          });
+                    }
+                  });
                     }
                   });
                 }
@@ -1104,8 +1115,9 @@ const getDataForTimeSeries = async (req, res) => {
             }
           });
 
-          const QtySumTotal = QtySum.reduce((a, b) => a + b, 0);
-          const lineTotalSumTotal = lineTotalSum.reduce((a, b) => a + b, 0);
+          // const QtySumTotal = QtySum.reduce((a, b) => a + b, 0);
+          // const lineTotalSumTotal = lineTotalSum.reduce((a, b) => a + b, 0);
+
           return {
             status_name,
             QtySumTotal,
