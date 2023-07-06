@@ -3,6 +3,8 @@ const fs = require('fs');
 const xlsx = require('xlsx');
 const nodemailer = require("nodemailer");
 const cron = require('node-cron');
+const moment = require('moment-timezone');
+const { log } = require("async");
 
 const getReturnsData = async(req, res) =>{
     const startDate = req.query.startDate;
@@ -161,35 +163,33 @@ const getMileStoneInfo = async(req, res) => {
 
 const createScheduledQueriesInfo = async(req, res) =>{
   try {     
-    const {userid, query, emails, name, day, week, month, subject } = req.body; 
+    const {userid, query, emails, name, day, week, month, subject, timezone } = req.body; 
     // min  hour DayOfMonth  Month  DayOfWeek
     // `0  7  *  *  *` daily
     // `0 7 * * 5`  Every week on friday
     //  `0 7 * * 0,14` bi weekly   every two weeks on Sundays
     //   `0 7 5 * * ` monthly  On friday of every month
     //`0  7  5  5  *`  YEARlY on friday of MAY at & AM
-    // let weekS = week || '*';
-    // let dayS = day || '*';
-    // let monthS = month || '*';
-     schedule = `*/5  *  *  *  *`;
+    let weekS = week || '*';
+    let dayS = day || '*';
+    let monthS = month || '*';
+    console.log(week, month, day);
+    if(!week && !day && !month) {
+      schedule = `*/5  *  *  *  *`;
+    }else {
+      schedule = `1  ${dayS}  ${monthS}  *  ${weekS}`;
+    }
+     
+    //  schedule = `*/5  *  *  *  *`;
      console.log(schedule); 
-    const insertQquery = `INSERT INTO schedulequeries (userid, query, emails, schedule, name, subject) VALUES($1, $2,$3, $4, $5, $6)`;
-    const values = [userid, query,  emails, schedule, name, subject];
+    const insertQquery = `INSERT INTO schedulequeries (userid, query, emails, schedule, name, subject, timezone) VALUES($1, $2,$3, $4, $5, $6, $7)`;
+    const values = [userid, query,  emails, schedule, name, subject, timezone];
     const result = await client.query(insertQquery, values);
     res.status(201).json({ message : "Scheduler info created successfully"});       
 } catch (error) {
   res.status(500).json({ error: error.message });
 }
 };
-
-
-const scheduleExportData = async (req, res) => {
-  const { query, toList , time} = req.body;
-  cron.schedule(`0 ${time} * * *`, async () => {
-    getExportedData(query, toList, res);
-  });
-};
-
 
 const getExportedData = async(query, toList, subject, res) => {
     try {
@@ -329,59 +329,83 @@ const excelExportData = async(excelFilePath, toList, subject, res ) => {
     }
   };
 
-  
-  cron.schedule(`*/5 17 * * *`, async (req, res) => {
-    const schedulerQuery = `SELECT * FROM schedulequeries`
-    const result = await client.query(schedulerQuery);
-    console.log(result.rows);
-    const schedulers = result.rows;
-    schedulers.forEach(item =>{
-      const callback = async () => {
-        console.log(`Cron Job ${item.name} executed`);
-      await  getExportedData(item.query, item.emails, item.subject, res);
-      };
-      createCronJob(item.schedule, callback);
-    });
-  });
 
-// const testSchedule = async (req, res) => {
-//   const { mins, hour, day, month, query, name,  toList} = req.body;
-//   console.log(hour);
+const scheduledJobs = new Set();
 
-//   let minsS = mins || '*';
-//   let hourS = hour || '*';
-//   let dayS = day || '*';
-//   let monthS = month || '*';
-//   let schedule = `*/${minsS} ${hourS} ${dayS} ${monthS} *`;
+// Function to check if a job is locked
+const isJobLocked = async (jobName) => {
+  const selectQuery = 'SELECT locked FROM job_locks WHERE job_name = $1';
+  const result = await client.query(selectQuery, [jobName]);
+  if (result.rows.length === 0) {
+    return false;
+  }
+  return result.rows[0].locked;
+};
 
-//   console.log(schedule);
-//   const callback = () => {
-//     console.log(`Cron Job ${name} executed`);
-//     getExportedData(query, toList, res);
-//   };
-//   createCronJob(schedule, callback, name);
-//   res.json({ success: true, message: `Cron Job ${name} scheduled` });
-// };
+// Function to lock a job
+const lockJob = async (jobName) => {
+  const updateQuery = 'UPDATE job_locks SET locked = TRUE WHERE job_name = $1';
+  await client.query(updateQuery, [jobName]);
+};
 
-const createCronJob = (schedule, callback) => {
-  const job = cron.schedule(schedule, callback);
-  job.start();
-  // insertScheduledJob();
-  return job;
+// Function to unlock a job
+const unlockJob = async (jobName) => {
+  const updateQuery = 'UPDATE job_locks SET locked = FALSE WHERE job_name = $1';
+  await client.query(updateQuery, [jobName]);
+  return;
+};
+
+// Function to insert a job lock into the database
+const insertJobLock = async (jobName) => {
+  const insertQuery = 'INSERT INTO job_locks (job_name, locked) VALUES ($1, FALSE) ON CONFLICT (job_name) DO UPDATE SET locked = FALSE';
+  await client.query(insertQuery, [jobName]);
 };
 
 
-  
+cron.schedule('*/5 * * * *', async (req, res) => {
+  const schedulerQuery = 'SELECT * FROM schedulequeries';
+  const result = await client.query(schedulerQuery);
+  console.log(result.rows);
+  const schedulers = result.rows;
+
+  schedulers.forEach(async (item) => {
+    const { name, query, emails, subject, schedule, timezone } = item;
+    if (!scheduledJobs.has(name) && !(await isJobLocked(name))) {
+      // Lock the job to prevent concurrent execution
+      await lockJob(name);
+
+      const callback = async () => {
+        console.log(`Cron job ${name} executed`);
+        await getExportedData(query, emails, subject, res);
+        // Unlock the job after execution
+        await unlockJob(name);
+      };
+      // const job = 
+      createCronJob(schedule, callback, timezone, name);
+      // return job;
+    }
+  });
+});
+
+const createCronJob = (schedule, callback,timeZone, name) => {
+  const job = cron.schedule(schedule, callback, {
+    scheduled: true,
+    timezone: timeZone,
+  });
+  job.start();
+  scheduledJobs.add(name);
+  insertJobLock(name);
+  return job;
+};
+
 
 module.exports = {
     getReturnsData,
     mileStoneInfo,
     getMileStoneInfo,
-    scheduleExportData,
     createWidgetsInfo,
     createStatusInfo,
     createQueriesInfo,
     getUserConfigurations,
-    createScheduledQueriesInfo,
-    // testSchedule
+    createScheduledQueriesInfo
   };
