@@ -4,7 +4,7 @@ const credentials = {
   user: "postgres",
   host: "13.233.98.14",
   database: "postgres",
-  password: "test@12345",
+  password: "postgres",
   port: 5432,
   keepAlive:true,
   idle_timeout:7200,
