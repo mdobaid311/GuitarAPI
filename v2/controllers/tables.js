@@ -15,6 +15,7 @@ const {
 } = require("../utils/fulfillment_type_details");
 const { mergeData } = require("../utils/state_mapping");
 const { getCategoryName } = require("../utils/category_map.js");
+const { totalSalesData } = require("./tempdata.js");
 
 const getTableData = (req, res) => {
   const { table } = req.query;
@@ -45,7 +46,8 @@ const getFullSalesData = (req, res) => {
   const end_date = req.query.end_date;
   const intervaltime = req.query.intervaltime;
 
-  
+  res.status(200).json(totalSalesData);
+  return;
 
   // 2022-11-17 22:12
   const start_date_formatted = moment(start_date, "YYYY-MM-DD HH:mm").format(
@@ -282,7 +284,7 @@ const getFullSalesData = (req, res) => {
           salesCategories: groupedSalesCategoriesData,
           topItemsData: groupedTopItemData,
         };
-
+    
         res.status(200).json({
           MFData: {
             name: "MF",
@@ -987,7 +989,7 @@ const getDataForTimeSeries = async (req, res) => {
   const orderDate = req.query.date;
   const userid = [Number(req.query.userid)];
 
-  console.log(userid)
+  console.log(userid);
   try {
     const timeLineDates = [];
     const mileStoneQuery = `SELECT * FROM configuremilestone WHERE userid=$1`;
@@ -998,11 +1000,10 @@ const getDataForTimeSeries = async (req, res) => {
       const insertResult = await client.query(insertQuery, insertValues);
 
       mileStoneResult = await client.query(mileStoneQuery, userid);
-      
     }
-    
+
     const userMilestones = Object.values(mileStoneResult.rows[0]).slice(1, 6);
-     const originalDate = new Date(orderDate);
+    const originalDate = new Date(orderDate);
     let msOne = new Date(originalDate);
     let msTwo = new Date(originalDate);
     let msThree = new Date(originalDate);
@@ -1046,7 +1047,7 @@ const getDataForTimeSeries = async (req, res) => {
     );
 
     client.query(query, (err, result) => {
-      console.log(err)
+      console.log(err);
 
       if (err) {
         return res.status(500).send(err);
@@ -1059,7 +1060,7 @@ const getDataForTimeSeries = async (req, res) => {
         const sixthTimeLineData = result[6].rows;
         const totalQtySum = result[7].rows;
         const milestonesQtySum = result[8].rows;
-        
+
         const mergedData = firstTimeLineData.map((first) => {
           const status_name = first.status_name;
           let lastDate = 0;
@@ -1100,14 +1101,16 @@ const getDataForTimeSeries = async (req, res) => {
                                 lastDate = sixth.maxdate
                                   .toISOString()
                                   .split("T")[0];
-                                
-                                  QtySumTotal = parseInt(mileStoneSum.qtysum);
-                                  lineTotalSumTotal = parseInt(mileStoneSum.linetotalsum);
+
+                                QtySumTotal = parseInt(mileStoneSum.qtysum);
+                                lineTotalSumTotal = parseInt(
+                                  mileStoneSum.linetotalsum
+                                );
                               }
-                            }                        
+                            }
                           });
-                    }
-                  });
+                        }
+                      });
                     }
                   });
                 }
@@ -1128,8 +1131,12 @@ const getDataForTimeSeries = async (req, res) => {
           };
         });
 
-
-        res.status(200).json({ timeLineDates, mergedData, totalQtySum : parseInt(totalQtySum[0].qtysum), userMilestones });
+        res.status(200).json({
+          timeLineDates,
+          mergedData,
+          totalQtySum: parseInt(totalQtySum[0].qtysum),
+          userMilestones,
+        });
       }
     });
   } catch (error) {
