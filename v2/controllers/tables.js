@@ -15,7 +15,7 @@ const {
 } = require("../utils/fulfillment_type_details");
 const { mergeData } = require("../utils/state_mapping");
 const { getCategoryName } = require("../utils/category_map.js");
-const { totalSalesData } = require("./tempdata.js");
+const { totalSalesData } = require("./tempdata.json");
 
 const getTableData = (req, res) => {
   const { table } = req.query;
