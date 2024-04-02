@@ -342,20 +342,18 @@ const getTopItems = async (req, res) => {
     "YYYY-MM-DD HH:mm:ss"
   );
 
-  console.log(new Date().toISOString());
-
   const query = `(select enterprise_key,web_category,brand_name,item_id,sum(line_ordered_qty) as line_ordered_qty,image_location,image_id
-  from order_book_line where enterprise_key ='GC' and order_date_parsed>='${start_date_formatted}' and order_date_parsed<='${end_date_formatted}'
+  from order_book_line where enterprise_key ='AWD' and order_date_parsed>='${start_date_formatted}' and order_date_parsed<='${end_date_formatted}'
   group by item_id,enterprise_key,web_category,brand_name,image_location,image_id order by line_ordered_qty desc limit 10) UNION ALL
   select enterprise_key,web_category,brand_name,item_id,sum(line_ordered_qty) as line_ordered_qty, image_location,image_id  
-  from order_book_line where enterprise_key ='MF' and order_date_parsed>='${start_date_formatted}' and order_date_parsed<='${end_date_formatted}'
+  from order_book_line where enterprise_key ='AWW' and order_date_parsed>='${start_date_formatted}' and order_date_parsed<='${end_date_formatted}'
   group by item_id,enterprise_key,web_category,brand_name,image_location,image_id order by line_ordered_qty desc limit 20;
   
   (select enterprise_key,web_category,brand_name,item_id,sum(original_order_total_amount) as original_order_total_amount,image_location,image_id  
-   from order_book_line where enterprise_key ='GC' and order_date_parsed>='${start_date_formatted}' and order_date_parsed<='${end_date_formatted}'
+   from order_book_line where enterprise_key ='AWD' and order_date_parsed>='${start_date_formatted}' and order_date_parsed<='${end_date_formatted}'
   group by item_id,enterprise_key,web_category,brand_name,image_location,image_id order by original_order_total_amount desc limit 10) UNION ALL
   select enterprise_key,web_category,brand_name,item_id,sum(original_order_total_amount) as original_order_total_amount, image_location,image_id  
-  from order_book_line where enterprise_key ='MF' and order_date_parsed>='${start_date_formatted}' and order_date_parsed<='${end_date_formatted}'
+  from order_book_line where enterprise_key ='AWW' and order_date_parsed>='${start_date_formatted}' and order_date_parsed<='${end_date_formatted}'
   group by item_id,enterprise_key,web_category,brand_name,image_location,image_id order by original_order_total_amount desc limit 20;
   `;
 
@@ -364,6 +362,7 @@ const getTopItems = async (req, res) => {
       if (err) {
         res.status(500).send(err);
       } else {
+        console.log(result[0].rows)
         const groupedTopItemsDataByVolume = result[0].rows.reduce(
           (result, item) => {
             const { enterprise_key, ...rest } = item;
@@ -377,7 +376,6 @@ const getTopItems = async (req, res) => {
           },
           {}
         );
-
         const groupedTopItemsDataByValue = result[1].rows.reduce(
           (result, item) => {
             const { enterprise_key, ...rest } = item;
@@ -391,17 +389,6 @@ const getTopItems = async (req, res) => {
           },
           {}
         );
-
-        const data = {
-          gc: {
-            byVolume: groupedTopItemsDataByVolume.GC,
-            byValue: groupedTopItemsDataByValue.GC,
-          },
-          mf: {
-            byVolume: groupedTopItemsDataByVolume.MF,
-            byValue: groupedTopItemsDataByValue.MF,
-          },
-        };
 
         res.json({
           byVolume: groupedTopItemsDataByVolume,
@@ -419,10 +406,10 @@ const getSalesAverage = async (req, res) => {
   let interval = req.query.interval;
 
   const extractDay = fulldate.split("-")[2];
-  if (!interval){
+  if (!interval) {
     interval = "hourly";
   }
-  
+
   let query;
   if (interval === "hourly") {
     query = `SELECT enterprise_key,CAST(date_hour AS TIME) AS time_only,avg(total_sum_by_day) as final_total from (
@@ -451,9 +438,7 @@ const getSalesAverage = async (req, res) => {
       enterprise_key ) as subquery_2 
     group by enterprise_key, time_only;
     `;
-  }
-
-  else if (interval === "daily") {
+  } else if (interval === "daily") {
     query = `
     SELECT enterprise_key, CAST(date_hour AS DATE) AS date_only, avg(final_total_by_day) AS final_total
 FROM (
@@ -469,7 +454,7 @@ FROM (
 GROUP BY enterprise_key, date_only
 ORDER BY date_only;
 `;
-  } else if( interval === "quarter-hour") {
+  } else if (interval === "quarter-hour") {
     query = `
     SELECT enterprise_key,CAST(date_hour AS TIME) AS time_only,avg(total_sum_by_day) as final_total from (
       SELECT
@@ -496,7 +481,7 @@ ORDER BY date_only;
       GROUP BY
           date_hour,
           enterprise_key ) as subquery_2 
-        group by enterprise_key, time_only;`
+        group by enterprise_key, time_only;`;
   }
 
   try {

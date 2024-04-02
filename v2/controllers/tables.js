@@ -46,8 +46,6 @@ const getFullSalesData = (req, res) => {
   const end_date = req.query.end_date;
   const intervaltime = req.query.intervaltime;
 
-  res.status(200).json(totalSalesData);
-  return;
 
   // 2022-11-17 22:12
   const start_date_formatted = moment(start_date, "YYYY-MM-DD HH:mm").format(
