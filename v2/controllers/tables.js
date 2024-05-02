@@ -16,6 +16,7 @@ const {
 const { mergeData } = require("../utils/state_mapping");
 const { getCategoryName } = require("../utils/category_map.js");
 const { totalSalesData } = require("./tempdata.json");
+const { enterprise_key_2, enterprise_key_1 } = require("../common/common.js");
 
 const getTableData = (req, res) => {
   const { table } = req.query;
@@ -243,37 +244,37 @@ const getFullSalesData = (req, res) => {
         );
 
         const groupedTopItemData = {
-          mf: {
-            byVolume: groupedTopItemsDataByVolume["MF"],
-            byValue: groupedTopItemsDataByValue["MF"],
+          awd: {
+            byVolume: groupedTopItemsDataByVolume[enterprise_key_2],
+            byValue: groupedTopItemsDataByValue[enterprise_key_2],
           },
-          gc: {
-            byVolume: groupedTopItemsDataByVolume["GC"],
-            byValue: groupedTopItemsDataByValue["GC"],
+          aww: {
+            byVolume: groupedTopItemsDataByVolume[enterprise_key_1],
+            byValue: groupedTopItemsDataByValue[enterprise_key_1],
           },
         };
 
         const shippingCost = {
-          gc: result[5].rows.filter(
-            (item) => item.enterprise_key === "GC" && item.is_discount === "N"
+          aww: result[5].rows.filter(
+            (item) => item.enterprise_key === enterprise_key_1 && item.is_discount === "N"
           ),
-          mf: result[5].rows.filter(
-            (item) => item.enterprise_key === "MF" && item.is_discount === "N"
+          awd: result[5].rows.filter(
+            (item) => item.enterprise_key === enterprise_key_2 && item.is_discount === "N"
           ),
         };
 
         const discount = {
-          gc: result[5].rows.filter(
-            (item) => item.enterprise_key === "GC" && item.is_discount === "Y"
+          aww: result[5].rows.filter(
+            (item) => item.enterprise_key === enterprise_key_1 && item.is_discount === "Y"
           ),
-          mf: result[5].rows.filter(
-            (item) => item.enterprise_key === "MF" && item.is_discount === "Y"
+          awd: result[5].rows.filter(
+            (item) => item.enterprise_key === enterprise_key_2 && item.is_discount === "Y"
           ),
         };
 
         const tax = {
-          gc: result[6].rows.filter((item) => item.enterprise_key === "GC"),
-          mf: result[6].rows.filter((item) => item.enterprise_key === "MF"),
+          aww: result[6].rows.filter((item) => item.enterprise_key === enterprise_key_1),
+          awd: result[6].rows.filter((item) => item.enterprise_key === enterprise_key_2),
         };
 
         const data = {
@@ -285,7 +286,7 @@ const getFullSalesData = (req, res) => {
     
         res.status(200).json({
           MFData: {
-            name: "MF",
+            name: enterprise_key_2,
             totalStats: {
               ...data.totalStats[1],
               line_margin: +Math.round(data.totalStats[1]?.line_margin)
@@ -301,14 +302,14 @@ const getFullSalesData = (req, res) => {
               )
                 ? +Math.round(result[7]?.rows[1]?.original_order_total_amount)
                 : 0,
-              shipping_cost: +Math.round(shippingCost.mf[0]?.sum)
-                ? +Math.round(shippingCost.mf[0]?.sum)
+              shipping_cost: +Math.round(shippingCost.awd[0]?.sum)
+                ? +Math.round(shippingCost.awd[0]?.sum)
                 : 0,
-              discount: +Math.round(discount.mf[0]?.sum)
-                ? +Math.round(discount.mf[0]?.sum)
+              discount: +Math.round(discount.awd[0]?.sum)
+                ? +Math.round(discount.awd[0]?.sum)
                 : 0,
-              tax: +Math.round(tax.mf[0]?.sum)
-                ? +Math.round(tax.mf[0]?.sum)
+              tax: +Math.round(tax.awd[0]?.sum)
+                ? +Math.round(tax.awd[0]?.sum)
                 : 0,
             },
             chartSeries: data.chartSeries[1],
@@ -324,10 +325,10 @@ const getFullSalesData = (req, res) => {
                 ? Object.values(data.salesCategories[1]?.ITEM_INFO_GROUPED)
                 : [],
             },
-            topItemsData: groupedTopItemData.mf,
+            topItemsData: groupedTopItemData.awd,
           },
           GCData: {
-            name: "GC",
+            name: enterprise_key_1,
             totalStats: {
               ...data.totalStats[0],
               line_margin: +Math.round(data.totalStats[0]?.line_margin)
@@ -343,14 +344,14 @@ const getFullSalesData = (req, res) => {
               )
                 ? +Math.round(result[7]?.rows[0]?.original_order_total_amount)
                 : 0,
-              shipping_cost: +Math.round(shippingCost.gc[0]?.sum)
-                ? +Math.round(shippingCost.gc[0]?.sum)
+              shipping_cost: +Math.round(shippingCost.aww[0]?.sum)
+                ? +Math.round(shippingCost.aww[0]?.sum)
                 : 0,
-              discount: +Math.round(discount.gc[0]?.sum)
-                ? +Math.round(discount.gc[0]?.sum)
+              discount: +Math.round(discount.aww[0]?.sum)
+                ? +Math.round(discount.aww[0]?.sum)
                 : 0,
-              tax: +Math.round(tax.gc[0]?.sum)
-                ? +Math.round(tax.gc[0]?.sum)
+              tax: +Math.round(tax.aww[0]?.sum)
+                ? +Math.round(tax.aww[0]?.sum)
                 : 0,
             },
             chartSeries: data.chartSeries[0],
@@ -366,7 +367,7 @@ const getFullSalesData = (req, res) => {
                 ? Object.values(data.salesCategories[0]?.ITEM_INFO_GROUPED)
                 : [],
             },
-            topItemsData: groupedTopItemData.gc,
+            topItemsData: groupedTopItemData.aww,
           },
         });
       }
@@ -574,37 +575,37 @@ const getFullSalesDataTEST = (req, res) => {
         );
 
         const groupedTopItemData = {
-          mf: {
-            byVolume: groupedTopItemsDataByVolume["MF"],
-            byValue: groupedTopItemsDataByValue["MF"],
+          awd: {
+            byVolume: groupedTopItemsDataByVolume[enterprise_key_2],
+            byValue: groupedTopItemsDataByValue[enterprise_key_2],
           },
-          gc: {
-            byVolume: groupedTopItemsDataByVolume["GC"],
-            byValue: groupedTopItemsDataByValue["GC"],
+          aww: {
+            byVolume: groupedTopItemsDataByVolume[enterprise_key_1],
+            byValue: groupedTopItemsDataByValue[enterprise_key_1],
           },
         };
 
         const shippingCost = {
-          gc: result[5].rows.filter(
-            (item) => item.enterprise_key === "GC" && item.is_discount === "N"
+          aww: result[5].rows.filter(
+            (item) => item.enterprise_key === enterprise_key_1 && item.is_discount === "N"
           ),
-          mf: result[5].rows.filter(
-            (item) => item.enterprise_key === "MF" && item.is_discount === "N"
+          awd: result[5].rows.filter(
+            (item) => item.enterprise_key === enterprise_key_2 && item.is_discount === "N"
           ),
         };
 
         const discount = {
-          gc: result[5].rows.filter(
-            (item) => item.enterprise_key === "GC" && item.is_discount === "Y"
+          aww: result[5].rows.filter(
+            (item) => item.enterprise_key === enterprise_key_1 && item.is_discount === "Y"
           ),
-          mf: result[5].rows.filter(
-            (item) => item.enterprise_key === "MF" && item.is_discount === "Y"
+          awd: result[5].rows.filter(
+            (item) => item.enterprise_key === enterprise_key_2 && item.is_discount === "Y"
           ),
         };
 
         const tax = {
-          gc: result[6].rows.filter((item) => item.enterprise_key === "GC"),
-          mf: result[6].rows.filter((item) => item.enterprise_key === "MF"),
+          aww: result[6].rows.filter((item) => item.enterprise_key === enterprise_key_1),
+          awd: result[6].rows.filter((item) => item.enterprise_key === enterprise_key_2),
         };
 
         const data = {
@@ -616,7 +617,7 @@ const getFullSalesDataTEST = (req, res) => {
 
         res.status(200).json({
           MFData: {
-            name: "MF",
+            name: enterprise_key_2,
             totalStats: {
               ...data.totalStats[1],
               line_margin: +Math.round(data.totalStats[1]?.line_margin)
@@ -632,14 +633,14 @@ const getFullSalesDataTEST = (req, res) => {
               )
                 ? +Math.round(result[7]?.rows[1]?.original_order_total_amount)
                 : 0,
-              shipping_cost: +Math.round(shippingCost.mf[0]?.sum)
-                ? +Math.round(shippingCost.mf[0]?.sum)
+              shipping_cost: +Math.round(shippingCost.awd[0]?.sum)
+                ? +Math.round(shippingCost.awd[0]?.sum)
                 : 0,
-              discount: +Math.round(discount.mf[0]?.sum)
-                ? +Math.round(discount.mf[0]?.sum)
+              discount: +Math.round(discount.awd[0]?.sum)
+                ? +Math.round(discount.awd[0]?.sum)
                 : 0,
-              tax: +Math.round(tax.mf[0]?.sum)
-                ? +Math.round(tax.mf[0]?.sum)
+              tax: +Math.round(tax.awd[0]?.sum)
+                ? +Math.round(tax.awd[0]?.sum)
                 : 0,
             },
             chartSeries: data.chartSeries[1],
@@ -655,10 +656,10 @@ const getFullSalesDataTEST = (req, res) => {
                 ? Object.values(data.salesCategories[1]?.ITEM_INFO_GROUPED)
                 : [],
             },
-            topItemsData: groupedTopItemData.mf,
+            topItemsData: groupedTopItemData.awd,
           },
           GCData: {
-            name: "GC",
+            name: enterprise_key_1,
             totalStats: {
               ...data.totalStats[0],
               line_margin: +Math.round(data.totalStats[0]?.line_margin)
@@ -674,14 +675,14 @@ const getFullSalesDataTEST = (req, res) => {
               )
                 ? +Math.round(result[7]?.rows[0]?.original_order_total_amount)
                 : 0,
-              shipping_cost: +Math.round(shippingCost.gc[0]?.sum)
-                ? +Math.round(shippingCost.gc[0]?.sum)
+              shipping_cost: +Math.round(shippingCost.aww[0]?.sum)
+                ? +Math.round(shippingCost.aww[0]?.sum)
                 : 0,
-              discount: +Math.round(discount.gc[0]?.sum)
-                ? +Math.round(discount.gc[0]?.sum)
+              discount: +Math.round(discount.aww[0]?.sum)
+                ? +Math.round(discount.aww[0]?.sum)
                 : 0,
-              tax: +Math.round(tax.gc[0]?.sum)
-                ? +Math.round(tax.gc[0]?.sum)
+              tax: +Math.round(tax.aww[0]?.sum)
+                ? +Math.round(tax.aww[0]?.sum)
                 : 0,
             },
             chartSeries: data.chartSeries[0],
@@ -697,7 +698,7 @@ const getFullSalesDataTEST = (req, res) => {
                 ? Object.values(data.salesCategories[0]?.ITEM_INFO_GROUPED)
                 : [],
             },
-            topItemsData: groupedTopItemData.gc,
+            topItemsData: groupedTopItemData.aww,
           },
         });
       }
@@ -1249,8 +1250,8 @@ const getSalesAvgData = async (req, res) => {
     const totalStats = result[1].rows;
     const chartSeriesData = result[2].rows;
 
-    const gcTotalStats = totalStats
-      .filter((item) => item.enterprise_key === "GC")
+    const awwTotalStats = totalStats
+      .filter((item) => item.enterprise_key === enterprise_key_1)
       .map((item) => {
         const ordertotalsum = parseInt(item.ordertotalsum);
         const lineqtysum = parseInt(item.lineqtysum);
@@ -1264,8 +1265,8 @@ const getSalesAvgData = async (req, res) => {
           lineqtyavg,
         };
       });
-    const mfTotalStats = totalStats
-      .filter((item) => item.enterprise_key === "MF")
+    const awdTotalStats = totalStats
+      .filter((item) => item.enterprise_key === enterprise_key_2)
       .map((item) => {
         const ordertotalsum = parseInt(item.ordertotalsum);
         const lineqtysum = parseInt(item.lineqtysum);
@@ -1279,8 +1280,8 @@ const getSalesAvgData = async (req, res) => {
           lineqtyavg,
         };
       });
-    const mfChartSeriesData = chartSeriesData
-      .filter((item) => item.enterprise_key === "MF")
+    const awdChartSeriesData = chartSeriesData
+      .filter((item) => item.enterprise_key === enterprise_key_2)
       .map((item) => {
         const datetime = moment(item.datetime).format("MMM-DD HH:mm");
         const ordertotalsum = parseInt(item.ordertotalsum);
@@ -1297,8 +1298,8 @@ const getSalesAvgData = async (req, res) => {
         };
       });
 
-    const gcChartSeriesData = chartSeriesData
-      .filter((item) => item.enterprise_key === "GC")
+    const awwChartSeriesData = chartSeriesData
+      .filter((item) => item.enterprise_key === enterprise_key_1)
       .map((item) => {
         const datetime = moment(item.datetime).format("MMM-DD HH:mm");
         const ordertotalsum = parseInt(item.ordertotalsum);
@@ -1317,19 +1318,19 @@ const getSalesAvgData = async (req, res) => {
 
     res.status(201).json({
       GCData: {
-        name: "GC",
-        totalStats: gcTotalStats,
+        name: enterprise_key_1,
+        totalStats: awwTotalStats,
         chartSeries: {
-          enterprise_key: "GC",
-          chartSeries: gcChartSeriesData,
+          enterprise_key: enterprise_key_1,
+          chartSeries: awwChartSeriesData,
         },
       },
       MFData: {
-        name: "MF",
-        totalStats: mfTotalStats,
+        name: enterprise_key_2,
+        totalStats: awdTotalStats,
         chartSeries: {
-          enterprise_key: "MF",
-          chartSeries: mfChartSeriesData,
+          enterprise_key: enterprise_key_2,
+          chartSeries: awdChartSeriesData,
         },
       },
     });

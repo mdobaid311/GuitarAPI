@@ -1,9 +1,8 @@
 const express = require("express");
 const {
   getSalesData,
-  getSalesDataByRange,
-  getFullSalesData,
 } = require("../controllers/active_line_status_details");
+const { getFullSalesData } = require("../controllers/tables");
 
 const router = express.Router();
 

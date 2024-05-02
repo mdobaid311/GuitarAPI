@@ -237,6 +237,8 @@ const getFullSalesData1 = async (req, res) => {
         : 24 * 60 * 60 * 365;
   }
 
+  console.log(`CALL getData('${start_date}','${end_date}',${interval})`)
+
   const query = `CALL getData('${start_date}','${end_date}',${interval})`;
   console.log(interval);
   connection.query(query, (err, result) => {
@@ -1260,4 +1262,6 @@ module.exports = {
   getSalesData,
   getSalesDataByRange,
   getFullSalesData,
+  getFullSalesData1,
+  getFullSalesData2
 };
