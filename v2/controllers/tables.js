@@ -229,6 +229,7 @@ const getFullSalesData = (req, res) => {
           {}
         );
 
+        console.log(result[4].rows)
         const groupedTopItemsDataByValue = result[8].rows.reduce(
           (result, item) => {
             const { enterprise_key, ...rest } = item;
@@ -283,93 +284,93 @@ const getFullSalesData = (req, res) => {
           salesCategories: groupedSalesCategoriesData,
           topItemsData: groupedTopItemData,
         };
-    
-        res.status(200).json({
-          MFData: {
-            name: enterprise_key_2,
-            totalStats: {
-              ...data.totalStats[1],
-              line_margin: +Math.round(data.totalStats[1]?.line_margin)
-                ? +Math.round(data.totalStats[1]?.line_margin)
-                : 0,
-              line_inventory_cost: +Math.round(
-                data.totalStats[1]?.line_inventory_cost
+    const responseData ={
+      Data1: {
+        name: enterprise_key_2,
+        totalStats: {
+          ...data.totalStats[1],
+          line_margin: +Math.round(data.totalStats[1]?.line_margin)
+            ? +Math.round(data.totalStats[1]?.line_margin)
+            : 0,
+          line_inventory_cost: +Math.round(
+            data.totalStats[1]?.line_inventory_cost
+          )
+            ? +Math.round(data.totalStats[1]?.line_inventory_cost)
+            : 0,
+          original_order_total_amount: +Math.round(
+            result[7]?.rows[1]?.original_order_total_amount
+          )
+            ? +Math.round(result[7]?.rows[1]?.original_order_total_amount)
+            : 0,
+          shipping_cost: +Math.round(shippingCost.awd[0]?.sum)
+            ? +Math.round(shippingCost.awd[0]?.sum)
+            : 0,
+          discount: +Math.round(discount.awd[0]?.sum)
+            ? +Math.round(discount.awd[0]?.sum)
+            : 0,
+          tax: +Math.round(tax.awd[0]?.sum)
+            ? +Math.round(tax.awd[0]?.sum)
+            : 0,
+        },
+        chartSeries: data.chartSeries[1],
+        salesCategories: {
+          ...data.salesCategories[1],
+          ORDER_CAPTURE_CHANNEL_GROUPED: data.salesCategories[1]
+            ?.ORDER_CAPTURE_CHANNEL_GROUPED
+            ? Object.values(
+                data.salesCategories[1]?.ORDER_CAPTURE_CHANNEL_GROUPED
               )
-                ? +Math.round(data.totalStats[1]?.line_inventory_cost)
-                : 0,
-              original_order_total_amount: +Math.round(
-                result[7]?.rows[1]?.original_order_total_amount
+            : [],
+          ITEM_INFO_GROUPED: data.salesCategories[1]?.ITEM_INFO_GROUPED
+            ? Object.values(data.salesCategories[1]?.ITEM_INFO_GROUPED)
+            : [],
+        },
+        topItemsData: groupedTopItemData.awd,
+      },
+      Data2: {
+        name: enterprise_key_1,
+        totalStats: {
+          ...data.totalStats[0],
+          line_margin: +Math.round(data.totalStats[0]?.line_margin)
+            ? +Math.round(data.totalStats[0]?.line_margin)
+            : 0,
+          line_inventory_cost: +Math.round(
+            data.totalStats[0]?.line_inventory_cost
+          )
+            ? +Math.round(data.totalStats[0]?.line_inventory_cost)
+            : 0,
+          original_order_total_amount: +Math.round(
+            result[7]?.rows[0]?.original_order_total_amount
+          )
+            ? +Math.round(result[7]?.rows[0]?.original_order_total_amount)
+            : 0,
+          shipping_cost: +Math.round(shippingCost.aww[0]?.sum)
+            ? +Math.round(shippingCost.aww[0]?.sum)
+            : 0,
+          discount: +Math.round(discount.aww[0]?.sum)
+            ? +Math.round(discount.aww[0]?.sum)
+            : 0,
+          tax: +Math.round(tax.aww[0]?.sum)
+            ? +Math.round(tax.aww[0]?.sum)
+            : 0,
+        },
+        chartSeries: data.chartSeries[0],
+        salesCategories: {
+          ...data.salesCategories[0],
+          ORDER_CAPTURE_CHANNEL_GROUPED: data.salesCategories[0]
+            ?.ORDER_CAPTURE_CHANNEL_GROUPED
+            ? Object.values(
+                data.salesCategories[0]?.ORDER_CAPTURE_CHANNEL_GROUPED
               )
-                ? +Math.round(result[7]?.rows[1]?.original_order_total_amount)
-                : 0,
-              shipping_cost: +Math.round(shippingCost.awd[0]?.sum)
-                ? +Math.round(shippingCost.awd[0]?.sum)
-                : 0,
-              discount: +Math.round(discount.awd[0]?.sum)
-                ? +Math.round(discount.awd[0]?.sum)
-                : 0,
-              tax: +Math.round(tax.awd[0]?.sum)
-                ? +Math.round(tax.awd[0]?.sum)
-                : 0,
-            },
-            chartSeries: data.chartSeries[1],
-            salesCategories: {
-              ...data.salesCategories[1],
-              ORDER_CAPTURE_CHANNEL_GROUPED: data.salesCategories[1]
-                ?.ORDER_CAPTURE_CHANNEL_GROUPED
-                ? Object.values(
-                    data.salesCategories[1]?.ORDER_CAPTURE_CHANNEL_GROUPED
-                  )
-                : [],
-              ITEM_INFO_GROUPED: data.salesCategories[1]?.ITEM_INFO_GROUPED
-                ? Object.values(data.salesCategories[1]?.ITEM_INFO_GROUPED)
-                : [],
-            },
-            topItemsData: groupedTopItemData.awd,
-          },
-          GCData: {
-            name: enterprise_key_1,
-            totalStats: {
-              ...data.totalStats[0],
-              line_margin: +Math.round(data.totalStats[0]?.line_margin)
-                ? +Math.round(data.totalStats[0]?.line_margin)
-                : 0,
-              line_inventory_cost: +Math.round(
-                data.totalStats[0]?.line_inventory_cost
-              )
-                ? +Math.round(data.totalStats[0]?.line_inventory_cost)
-                : 0,
-              original_order_total_amount: +Math.round(
-                result[7]?.rows[0]?.original_order_total_amount
-              )
-                ? +Math.round(result[7]?.rows[0]?.original_order_total_amount)
-                : 0,
-              shipping_cost: +Math.round(shippingCost.aww[0]?.sum)
-                ? +Math.round(shippingCost.aww[0]?.sum)
-                : 0,
-              discount: +Math.round(discount.aww[0]?.sum)
-                ? +Math.round(discount.aww[0]?.sum)
-                : 0,
-              tax: +Math.round(tax.aww[0]?.sum)
-                ? +Math.round(tax.aww[0]?.sum)
-                : 0,
-            },
-            chartSeries: data.chartSeries[0],
-            salesCategories: {
-              ...data.salesCategories[0],
-              ORDER_CAPTURE_CHANNEL_GROUPED: data.salesCategories[0]
-                ?.ORDER_CAPTURE_CHANNEL_GROUPED
-                ? Object.values(
-                    data.salesCategories[0]?.ORDER_CAPTURE_CHANNEL_GROUPED
-                  )
-                : [],
-              ITEM_INFO_GROUPED: data.salesCategories[0]?.ITEM_INFO_GROUPED
-                ? Object.values(data.salesCategories[0]?.ITEM_INFO_GROUPED)
-                : [],
-            },
-            topItemsData: groupedTopItemData.aww,
-          },
-        });
+            : [],
+          ITEM_INFO_GROUPED: data.salesCategories[0]?.ITEM_INFO_GROUPED
+            ? Object.values(data.salesCategories[0]?.ITEM_INFO_GROUPED)
+            : [],
+        },
+        topItemsData: groupedTopItemData.aww,
+      },
+    }
+        res.status(200).json(Object.values(responseData));
       }
     });
   } catch (error) {
@@ -615,8 +616,8 @@ const getFullSalesDataTEST = (req, res) => {
           topItemsData: groupedTopItemData,
         };
 
-        res.status(200).json({
-          MFData: {
+        const responseData = {
+          Data1: {
             name: enterprise_key_2,
             totalStats: {
               ...data.totalStats[1],
@@ -658,7 +659,7 @@ const getFullSalesDataTEST = (req, res) => {
             },
             topItemsData: groupedTopItemData.awd,
           },
-          GCData: {
+          Data2: {
             name: enterprise_key_1,
             totalStats: {
               ...data.totalStats[0],
@@ -700,7 +701,9 @@ const getFullSalesDataTEST = (req, res) => {
             },
             topItemsData: groupedTopItemData.aww,
           },
-        });
+        }
+
+        res.status(200).json(Object.values(responseData));
       }
     });
   } catch (error) {
