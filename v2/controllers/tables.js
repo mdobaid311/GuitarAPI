@@ -26,7 +26,7 @@ const getTableData = (req, res) => {
       console.log(err);
       res.status(500).send("Error fetching data");
     } else {
-      res.send(result.rows);
+      res.send(result?.rows);
     }
   });
 };
@@ -38,7 +38,7 @@ const getCustomQueryDate = (req, res) => {
       console.log(err);
       res.status(500).send("Error fetching data");
     } else {
-      res.send(result.rows);
+      res.send(result?.rows);
     }
   });
 };
@@ -789,9 +789,9 @@ const UserLogin = async (req, res) => {
     const values = [username];
     const result = await client.query(query, values);
     if (result?.rows?.length === 1) {
-      const isMatch = await bcrypt.compare(password, result.rows[0].password);
+      const isMatch = await bcrypt.compare(password, result?.rows[0].password);
       if (isMatch) {
-        const { password, ...rest } = result.rows[0];
+        const { password, ...rest } = result?.rows[0];
         res.status(200).json({ ...rest });
       } else {
         res.status(401).json({ message: "Invalid username or password" });
@@ -880,7 +880,7 @@ const getMapData = async (req, res) => {
         ];
       });
 
-      const sortedArray = output.sort((a, b) => {
+      const sortedArray = output?.sort((a, b) => {
         return b[1] - a[1];
       });
       console.log(sortedArray);
@@ -894,7 +894,7 @@ const getAllUser = async (req, res) => {
   try {
     const query = `SELECT * FROM users`;
     client.query(query, (err, result) => {
-      res.status(200).json(result.rows);
+      res.status(200).json(result?.rows);
     });
   } catch (error) {}
 };
@@ -909,7 +909,7 @@ const getTimeSeriesData = async (req, res) => {
     if (result?.rows?.length < 1) {
       return res.status(401).json({ success: false, message: "No data found" });
     } else {
-      const data = result.rows;
+      const data = result?.rows;
       const statusNames = [...new Set(data.map((item) => item.status_name))];
 
       // Generate date range based on the data
@@ -980,7 +980,7 @@ const getCityData = async (req, res) => {
   console.log(query);
   try {
     client.query(query, (err, result) => {
-      res.status(200).json(result.rows);
+      res.status(200).json(result?.rows);
     });
   } catch (error) {
     console.log(error);
@@ -1196,7 +1196,7 @@ const getThresholdInfo = async (req, res) => {
         ],
       });
     }
-    res.status(201).json({ result: result.rows });
+    res.status(201).json({ result: result?.rows });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
