@@ -717,7 +717,7 @@ const UserRegistration = async (req, res) => {
     const query = "SELECT * FROM users WHERE username = $1";
     const result = await client.query(query, [username]);
 
-    if (result.rows.length > 0) {
+    if (result?.rows?.length > 0) {
       return res.status(401).json({ message: "Username already exists" });
     }
     const saltRounds = 10;
@@ -788,7 +788,7 @@ const UserLogin = async (req, res) => {
     const query = "SELECT * FROM users WHERE username = $1";
     const values = [username];
     const result = await client.query(query, values);
-    if (result.rows.length === 1) {
+    if (result?.rows?.length === 1) {
       const isMatch = await bcrypt.compare(password, result.rows[0].password);
       if (isMatch) {
         const { password, ...rest } = result.rows[0];
@@ -867,11 +867,11 @@ const getMapData = async (req, res) => {
 
   try {
     client.query(query, (err, result) => {
-      const totalSum = result.rows.reduce((acc, item) => {
+      const totalSum = result?.rows?.reduce((acc, item) => {
         return acc + +item.sum;
       }, 0);
 
-      const output = result.rows.map((item) => {
+      const output = result?.rows?.map((item) => {
         // third value should be the percentage of the total with only two decimal places
         return [
           ("us-" + item.ship_to_state.trim()).toLowerCase(),
@@ -906,7 +906,7 @@ const getTimeSeriesData = async (req, res) => {
   try {
     const query = `SELECT * FROM order_status_time_series WHERE actual_order_date = '${date}' ORDER BY status,actual_status_date;`;
     const result = await client.query(query);
-    if (result.rows.length < 1) {
+    if (result?.rows?.length < 1) {
       return res.status(401).json({ success: false, message: "No data found" });
     } else {
       const data = result.rows;
@@ -1179,7 +1179,7 @@ const getThresholdInfo = async (req, res) => {
     const query = `SELECT * FROM configurethreshold WHERE userid =$1`;
     const userid = [req.query.userid];
     const result = await client.query(query, userid);
-    if (result.rows.length < 1) {
+    if (result?.rows?.length < 1) {
       // if no data found for the user then create a new record for the user with default values of threshold 10, 20 and 21
       const insertQuery = `INSERT INTO configurethreshold(userid, tsone, tstwo,tsthree) VALUES($1, $2, $3,$4)`;
       const values = [+userid, 10, 20, 21];
