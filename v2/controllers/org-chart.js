@@ -2,6 +2,7 @@ const client = require("../config/postgre_client");
 const {
   getFulfillmentDescription,
 } = require("../utils/fulfillment_type_details");
+
 const getOrgChartDataRange = async (req, res) => {
   // select enterprise_key, line_fulfillment_type, original_order_total_amount from order_book_line where order_date_parsed>='2023-01-01' and order_date_parsed<='2023-01-31';
 
