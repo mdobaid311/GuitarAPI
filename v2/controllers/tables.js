@@ -47,7 +47,6 @@ const getFullSalesData = (req, res) => {
   const end_date = req.query.end_date;
   const intervaltime = req.query.intervaltime;
 
-
   // 2022-11-17 22:12
   const start_date_formatted = moment(start_date, "YYYY-MM-DD HH:mm").format(
     "YYYY-MM-DD HH:mm:ss"
@@ -70,13 +69,13 @@ const getFullSalesData = (req, res) => {
   try {
     client.query(query, (err, result) => {
       if (err) {
-        console.log(err);
         res.status(500).send(err);
         return;
       } else {
         const groupedChartSeries = result[2].rows.reduce((acc, order, i) => {
           const enterpriseKey = order.enterprise_key;
 
+          console.log(result[2].rows);
           if (!acc[enterpriseKey]) {
             acc[enterpriseKey] = {
               enterprise_key: enterpriseKey,
@@ -88,7 +87,7 @@ const getFullSalesData = (req, res) => {
           acc[enterpriseKey].series.push({
             enterprise_key: order.enterprise_key,
             datetime: moment(order.datetime).format("MMM-DD HH:mm"),
-            // datetime: formatDate(order.datetime, intervaltime, i),
+            order_capture_channel: order.order_capture_channel,
             original_order_total_amount: +order.original_order_total_amount,
             line_ordered_qty: +order.line_ordered_qty,
           });
@@ -229,7 +228,6 @@ const getFullSalesData = (req, res) => {
           {}
         );
 
-        console.log(result[4].rows)
         const groupedTopItemsDataByValue = result[8].rows.reduce(
           (result, item) => {
             const { enterprise_key, ...rest } = item;
@@ -257,25 +255,37 @@ const getFullSalesData = (req, res) => {
 
         const shippingCost = {
           aww: result[5].rows.filter(
-            (item) => item.enterprise_key === enterprise_key_1 && item.is_discount === "N"
+            (item) =>
+              item.enterprise_key === enterprise_key_1 &&
+              item.is_discount === "N"
           ),
           awd: result[5].rows.filter(
-            (item) => item.enterprise_key === enterprise_key_2 && item.is_discount === "N"
+            (item) =>
+              item.enterprise_key === enterprise_key_2 &&
+              item.is_discount === "N"
           ),
         };
 
         const discount = {
           aww: result[5].rows.filter(
-            (item) => item.enterprise_key === enterprise_key_1 && item.is_discount === "Y"
+            (item) =>
+              item.enterprise_key === enterprise_key_1 &&
+              item.is_discount === "Y"
           ),
           awd: result[5].rows.filter(
-            (item) => item.enterprise_key === enterprise_key_2 && item.is_discount === "Y"
+            (item) =>
+              item.enterprise_key === enterprise_key_2 &&
+              item.is_discount === "Y"
           ),
         };
 
         const tax = {
-          aww: result[6].rows.filter((item) => item.enterprise_key === enterprise_key_1),
-          awd: result[6].rows.filter((item) => item.enterprise_key === enterprise_key_2),
+          aww: result[6].rows.filter(
+            (item) => item.enterprise_key === enterprise_key_1
+          ),
+          awd: result[6].rows.filter(
+            (item) => item.enterprise_key === enterprise_key_2
+          ),
         };
 
         const data = {
@@ -284,92 +294,92 @@ const getFullSalesData = (req, res) => {
           salesCategories: groupedSalesCategoriesData,
           topItemsData: groupedTopItemData,
         };
-    const responseData ={
-      Data1: {
-        name: enterprise_key_2,
-        totalStats: {
-          ...data.totalStats[1],
-          line_margin: +Math.round(data.totalStats[1]?.line_margin)
-            ? +Math.round(data.totalStats[1]?.line_margin)
-            : 0,
-          line_inventory_cost: +Math.round(
-            data.totalStats[1]?.line_inventory_cost
-          )
-            ? +Math.round(data.totalStats[1]?.line_inventory_cost)
-            : 0,
-          original_order_total_amount: +Math.round(
-            result[7]?.rows[1]?.original_order_total_amount
-          )
-            ? +Math.round(result[7]?.rows[1]?.original_order_total_amount)
-            : 0,
-          shipping_cost: +Math.round(shippingCost.awd[0]?.sum)
-            ? +Math.round(shippingCost.awd[0]?.sum)
-            : 0,
-          discount: +Math.round(discount.awd[0]?.sum)
-            ? +Math.round(discount.awd[0]?.sum)
-            : 0,
-          tax: +Math.round(tax.awd[0]?.sum)
-            ? +Math.round(tax.awd[0]?.sum)
-            : 0,
-        },
-        chartSeries: data.chartSeries[1],
-        salesCategories: {
-          ...data.salesCategories[1],
-          ORDER_CAPTURE_CHANNEL_GROUPED: data.salesCategories[1]
-            ?.ORDER_CAPTURE_CHANNEL_GROUPED
-            ? Object.values(
-                data.salesCategories[1]?.ORDER_CAPTURE_CHANNEL_GROUPED
+        const responseData = {
+          Data1: {
+            name: enterprise_key_2,
+            totalStats: {
+              ...data.totalStats[1],
+              line_margin: +Math.round(data.totalStats[1]?.line_margin)
+                ? +Math.round(data.totalStats[1]?.line_margin)
+                : 0,
+              line_inventory_cost: +Math.round(
+                data.totalStats[1]?.line_inventory_cost
               )
-            : [],
-          ITEM_INFO_GROUPED: data.salesCategories[1]?.ITEM_INFO_GROUPED
-            ? Object.values(data.salesCategories[1]?.ITEM_INFO_GROUPED)
-            : [],
-        },
-        topItemsData: groupedTopItemData.awd,
-      },
-      Data2: {
-        name: enterprise_key_1,
-        totalStats: {
-          ...data.totalStats[0],
-          line_margin: +Math.round(data.totalStats[0]?.line_margin)
-            ? +Math.round(data.totalStats[0]?.line_margin)
-            : 0,
-          line_inventory_cost: +Math.round(
-            data.totalStats[0]?.line_inventory_cost
-          )
-            ? +Math.round(data.totalStats[0]?.line_inventory_cost)
-            : 0,
-          original_order_total_amount: +Math.round(
-            result[7]?.rows[0]?.original_order_total_amount
-          )
-            ? +Math.round(result[7]?.rows[0]?.original_order_total_amount)
-            : 0,
-          shipping_cost: +Math.round(shippingCost.aww[0]?.sum)
-            ? +Math.round(shippingCost.aww[0]?.sum)
-            : 0,
-          discount: +Math.round(discount.aww[0]?.sum)
-            ? +Math.round(discount.aww[0]?.sum)
-            : 0,
-          tax: +Math.round(tax.aww[0]?.sum)
-            ? +Math.round(tax.aww[0]?.sum)
-            : 0,
-        },
-        chartSeries: data.chartSeries[0],
-        salesCategories: {
-          ...data.salesCategories[0],
-          ORDER_CAPTURE_CHANNEL_GROUPED: data.salesCategories[0]
-            ?.ORDER_CAPTURE_CHANNEL_GROUPED
-            ? Object.values(
-                data.salesCategories[0]?.ORDER_CAPTURE_CHANNEL_GROUPED
+                ? +Math.round(data.totalStats[1]?.line_inventory_cost)
+                : 0,
+              original_order_total_amount: +Math.round(
+                result[7]?.rows[1]?.original_order_total_amount
               )
-            : [],
-          ITEM_INFO_GROUPED: data.salesCategories[0]?.ITEM_INFO_GROUPED
-            ? Object.values(data.salesCategories[0]?.ITEM_INFO_GROUPED)
-            : [],
-        },
-        topItemsData: groupedTopItemData.aww,
-      },
-    }
+                ? +Math.round(result[7]?.rows[1]?.original_order_total_amount)
+                : 0,
+              shipping_cost: +Math.round(shippingCost.awd[0]?.sum)
+                ? +Math.round(shippingCost.awd[0]?.sum)
+                : 0,
+              discount: +Math.round(discount.awd[0]?.sum)
+                ? +Math.round(discount.awd[0]?.sum)
+                : 0,
+              tax: +Math.round(tax.awd[0]?.sum)
+                ? +Math.round(tax.awd[0]?.sum)
+                : 0,
+            },
+            chartSeries: data.chartSeries[1],
+            salesCategories: {
+              ...data.salesCategories[1],
+              ORDER_CAPTURE_CHANNEL_GROUPED: data.salesCategories[1]
+                ?.ORDER_CAPTURE_CHANNEL_GROUPED
+                ? Object.values(
+                    data.salesCategories[1]?.ORDER_CAPTURE_CHANNEL_GROUPED
+                  )
+                : [],
+              ITEM_INFO_GROUPED: data.salesCategories[1]?.ITEM_INFO_GROUPED
+                ? Object.values(data.salesCategories[1]?.ITEM_INFO_GROUPED)
+                : [],
+            },
+            topItemsData: groupedTopItemData.awd,
+          },
+          Data2: {
+            name: enterprise_key_1,
+            totalStats: {
+              ...data.totalStats[0],
+              line_margin: +Math.round(data.totalStats[0]?.line_margin)
+                ? +Math.round(data.totalStats[0]?.line_margin)
+                : 0,
+              line_inventory_cost: +Math.round(
+                data.totalStats[0]?.line_inventory_cost
+              )
+                ? +Math.round(data.totalStats[0]?.line_inventory_cost)
+                : 0,
+              original_order_total_amount: +Math.round(
+                result[7]?.rows[0]?.original_order_total_amount
+              )
+                ? +Math.round(result[7]?.rows[0]?.original_order_total_amount)
+                : 0,
+              shipping_cost: +Math.round(shippingCost.aww[0]?.sum)
+                ? +Math.round(shippingCost.aww[0]?.sum)
+                : 0,
+              discount: +Math.round(discount.aww[0]?.sum)
+                ? +Math.round(discount.aww[0]?.sum)
+                : 0,
+              tax: +Math.round(tax.aww[0]?.sum)
+                ? +Math.round(tax.aww[0]?.sum)
+                : 0,
+            },
+            chartSeries: data.chartSeries[0],
+            salesCategories: {
+              ...data.salesCategories[0],
+              ORDER_CAPTURE_CHANNEL_GROUPED: data.salesCategories[0]
+                ?.ORDER_CAPTURE_CHANNEL_GROUPED
+                ? Object.values(
+                    data.salesCategories[0]?.ORDER_CAPTURE_CHANNEL_GROUPED
+                  )
+                : [],
+              ITEM_INFO_GROUPED: data.salesCategories[0]?.ITEM_INFO_GROUPED
+                ? Object.values(data.salesCategories[0]?.ITEM_INFO_GROUPED)
+                : [],
+            },
+            topItemsData: groupedTopItemData.aww,
+          },
+        };
         res.status(200).json(Object.values(responseData));
       }
     });
@@ -588,25 +598,37 @@ const getFullSalesDataTEST = (req, res) => {
 
         const shippingCost = {
           aww: result[5].rows.filter(
-            (item) => item.enterprise_key === enterprise_key_1 && item.is_discount === "N"
+            (item) =>
+              item.enterprise_key === enterprise_key_1 &&
+              item.is_discount === "N"
           ),
           awd: result[5].rows.filter(
-            (item) => item.enterprise_key === enterprise_key_2 && item.is_discount === "N"
+            (item) =>
+              item.enterprise_key === enterprise_key_2 &&
+              item.is_discount === "N"
           ),
         };
 
         const discount = {
           aww: result[5].rows.filter(
-            (item) => item.enterprise_key === enterprise_key_1 && item.is_discount === "Y"
+            (item) =>
+              item.enterprise_key === enterprise_key_1 &&
+              item.is_discount === "Y"
           ),
           awd: result[5].rows.filter(
-            (item) => item.enterprise_key === enterprise_key_2 && item.is_discount === "Y"
+            (item) =>
+              item.enterprise_key === enterprise_key_2 &&
+              item.is_discount === "Y"
           ),
         };
 
         const tax = {
-          aww: result[6].rows.filter((item) => item.enterprise_key === enterprise_key_1),
-          awd: result[6].rows.filter((item) => item.enterprise_key === enterprise_key_2),
+          aww: result[6].rows.filter(
+            (item) => item.enterprise_key === enterprise_key_1
+          ),
+          awd: result[6].rows.filter(
+            (item) => item.enterprise_key === enterprise_key_2
+          ),
         };
 
         const data = {
@@ -701,7 +723,7 @@ const getFullSalesDataTEST = (req, res) => {
             },
             topItemsData: groupedTopItemData.aww,
           },
-        }
+        };
 
         res.status(200).json(Object.values(responseData));
       }
