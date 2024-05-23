@@ -322,7 +322,7 @@ const getFullSalesData = (req, res) => {
                 ? +Math.round(tax.awd[0]?.sum)
                 : 0,
             },
-            chartSeries: data.chartSeries[1],
+            chartSeries: data.chartSeries[0],
             salesCategories: {
               ...data.salesCategories[1],
               ORDER_CAPTURE_CHANNEL_GROUPED: data.salesCategories[1]
@@ -364,7 +364,7 @@ const getFullSalesData = (req, res) => {
                 ? +Math.round(tax.aww[0]?.sum)
                 : 0,
             },
-            chartSeries: data.chartSeries[0],
+            chartSeries: data.chartSeries[1],
             salesCategories: {
               ...data.salesCategories[0],
               ORDER_CAPTURE_CHANNEL_GROUPED: data.salesCategories[0]
